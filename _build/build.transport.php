@@ -8,7 +8,7 @@ $tstart = $mtime;
 set_time_limit(0);
 
 // override with your own defines here (see build.config.sample.php)
-require_once ('build.config.php');
+require_once dirname(__FILE__).'/build.config.php';
 
 require_once (MODX_CORE_PATH . 'model/modx/modx.class.php');
 $modx= new modX();
@@ -22,6 +22,7 @@ $release = '';
 $modx->loadClass('transport.modPackageBuilder','',false, true);
 $builder = new modPackageBuilder($modx);
 $builder->create($name, $version, $release);
+$builder->registerNamespace('component-template',false,true);
 
 $sources= array (
     'root' => dirname(dirname(__FILE__)) . '/',
@@ -43,6 +44,9 @@ $sources= array (
 //    'target' => "return MODX_ASSETS_PATH . 'snippets/';",
 //));
 //$builder->putVehicle($vehicle);
+
+// load lexicon strings
+$builder->buildLexicon($sources['root'].'_build/lexicon/');
 
 // zip up the package
 $builder->pack();
