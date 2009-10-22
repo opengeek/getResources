@@ -151,7 +151,7 @@ include_once(MODX_CORE_PATH . 'components/getresources/include.parsetpl.php');
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
     if (!empty($includeTVs)) {
-        $templateVars =& $resource->getMany('modTemplateVar');
+        $templateVars =& $resource->getMany('TemplateVars');
         foreach ($templateVars as $tvId => $templateVar) {
             $tvs[$tvPrefix . $templateVar->get('name')] = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
         }

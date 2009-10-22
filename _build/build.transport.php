@@ -34,7 +34,7 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 $name = 'getresources';
 $version = '1.0.0';
-$release = 'beta-1';
+$release = 'beta2';
 
 $modx->loadClass('transport.modPackageBuilder','',false, true);
 $builder = new modPackageBuilder($modx);
