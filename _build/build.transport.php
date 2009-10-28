@@ -29,7 +29,7 @@ require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
 
 $modx= new modX();
 $modx->initialize('mgr');
-$modx->setLogLevel(MODX_LOG_LEVEL_INFO);
+$modx->setLogLevel(modX::LOG_LEVEL_INFO);
 $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 $name = 'getresources';
@@ -46,12 +46,12 @@ $builder->createPackage($name, $version, $release);
 // manually create the object, grabbing the source from a file
 $c= $modx->newObject('modSnippet');
 $c->set('name', 'getResources');
-$c->set('description', '<strong>1.0.0-beta-1</strong> A general purpose Resource listing and summarization snippet for MODx Revolution');
+$c->set('description', '<strong>1.0.0-beta-2</strong> A general purpose Resource listing and summarization snippet for MODx Revolution');
 $c->set('category', 0);
 $c->set('snippet', file_get_contents($sources['assets'] . 'snippet.getresources.php'));
 
 // create a transport vehicle for the data object
-$attributes= array(XPDO_TRANSPORT_UNIQUE_KEY => 'name');
+$attributes= array(xPDOTransport::UNIQUE_KEY => 'name');
 $vehicle = $builder->createVehicle($c, $attributes);
 $vehicle->resolve('file',array(
     'source' => $sources['assets'] . 'getresources',
@@ -72,5 +72,5 @@ $tend= $mtime;
 $totalTime= ($tend - $tstart);
 $totalTime= sprintf("%2.4f s", $totalTime);
 
-$modx->log(MODX_LOG_LEVEL_INFO,"Package Built.\nExecution time: {$totalTime}");
+$modx->log(modX::LOG_LEVEL_INFO,"Package Built.\nExecution time: {$totalTime}");
 exit();

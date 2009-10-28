@@ -138,7 +138,7 @@ $columns = $includeContent ? '*' : $modx->getSelectColumns('modResource', 'modRe
 $criteria->select($columns);
 if (!empty($debug)) {
     $criteria->prepare();
-    $modx->log(MODX_LOG_LEVEL_ERROR, $criteria->toSQL());
+    $modx->log(modX::LOG_LEVEL_ERROR, $criteria->toSQL());
 }
 $collection = $modx->getCollection('modResource', $criteria);
 
