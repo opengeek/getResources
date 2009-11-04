@@ -61,6 +61,7 @@
  */
 $output = array();
 
+/* set default properties */
 $tpl = !empty($tpl) ? $tpl : '';
 $includeContent = !empty($includeContent) ? true : false;
 $includeTVs = !empty($includeTVs) ? true : false;
@@ -85,6 +86,7 @@ $limit = !empty($limit) ? intval($limit) : 5;
 $offset = !empty($offset) ? intval($offset) : 0;
 $totalVar = !empty($totalVar) ? $totalVar : 'total';
 
+/* build query */
 $contextResourceTbl = $modx->getTableName('modContextResource');
 $context = empty($context) ? $modx->quote($modx->context->get('key')) : $modx->quote($context);
 $criteria = $modx->newQuery('modResource', array(
@@ -146,7 +148,8 @@ $idx = !empty($idx) ? intval($idx) : 1;
 $first = empty($first) && $first !== '0' ? 1 : intval($first);
 $last = empty($last) ? (count($collection) + $idx - 1) : intval($last);
 
-include_once(MODX_CORE_PATH . 'components/getresources/include.parsetpl.php');
+/* include parseTpl */
+include_once $modx->getOption('core_path').'components/getresources/include.parsetpl.php';
 
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
