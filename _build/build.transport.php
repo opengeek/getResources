@@ -11,58 +11,65 @@ $mtime = microtime();
 $mtime = explode(" ", $mtime);
 $mtime = $mtime[1] + $mtime[0];
 $tstart = $mtime;
-// get rid of time limit
 set_time_limit(0);
 
+/* define sources */
 $root = dirname(dirname(__FILE__)) . '/';
 $sources= array (
     'root' => $root,
     'build' => $root . '_build/',
     'lexicon' => $root . '_build/lexicon/',
-    'assets' => $root . 'assets/',
+    'source_core' => $root . 'core/components/getresources',
 );
 unset($root);
 
-// override with your own defines here (see build.config.sample.php)
+/* instantiate MODx */
 require_once $sources['build'].'build.config.php';
 require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
-
 $modx= new modX();
 $modx->initialize('mgr');
-$modx->setLogLevel(MODX_LOG_LEVEL_INFO);
+$modx->setLogLevel(xPDO::LOG_LEVEL_INFO);
 $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
-$name = 'getresources';
-$version = '1.0.0';
-$release = 'beta-1';
+/* set package info */
+define('PKG_NAME','getresources');
+define('PKG_VERSION','1.0.0');
+define('PKG_RELEASE','beta3');
 
+/* load builder */
 $modx->loadClass('transport.modPackageBuilder','',false, true);
 $builder = new modPackageBuilder($modx);
-$builder->createPackage($name, $version, $release);
+$builder->createPackage(PKG_NAME, PKG_VERSION, PKG_RELEASE);
 //$builder->registerNamespace('getresources',false,true,'{core_path}components/getresources/');
 
+/* create snippet object */
+$modx->log(xPDO::LOG_LEVEL_INFO,'Adding in snippet.'); flush();
+$snippet= $modx->newObject('modSnippet');
+$snippet->set('name', 'getResources');
+$snippet->set('description', '<strong>'.PKG_VERSION.'-'.PKG_RELEASE.'</strong> A general purpose Resource listing and summarization snippet for MODx Revolution');
+$snippet->set('category', 0);
+$snippet->set('snippet', file_get_contents($sources['source_core'] . '/snippet.getresources.php'));
+$properties = include $sources['build'].'properties.inc.php';
+$snippet->setProperties($properties);
+unset($properties);
 
-// get the source from the actual snippet in your database OR
-// manually create the object, grabbing the source from a file
-$c= $modx->newObject('modSnippet');
-$c->set('name', 'getResources');
-$c->set('description', '<strong>1.0.0-beta-1</strong> A general purpose Resource listing and summarization snippet for MODx Revolution');
-$c->set('category', 0);
-$c->set('snippet', file_get_contents($sources['assets'] . 'snippet.getresources.php'));
 
-// create a transport vehicle for the data object
-$attributes= array(XPDO_TRANSPORT_UNIQUE_KEY => 'name');
-$vehicle = $builder->createVehicle($c, $attributes);
+/* create a transport vehicle for the data object */
+$vehicle = $builder->createVehicle($snippet,array(
+    xPDOTransport::PRESERVE_KEYS => false,
+    xPDOTransport::UPDATE_OBJECT => true,
+    xPDOTransport::UNIQUE_KEY => 'name',
+));
 $vehicle->resolve('file',array(
-    'source' => $sources['assets'] . 'getresources',
+    'source' => $sources['source_core'],
     'target' => "return MODX_CORE_PATH . 'components/';",
 ));
 $builder->putVehicle($vehicle);
 
-// load lexicon strings
+/* load lexicon strings */
 //$builder->buildLexicon($sources['lexicon']);
 
-// zip up the package
+/* zip up the package */
 $builder->pack();
 
 $mtime= microtime();
@@ -72,5 +79,5 @@ $tend= $mtime;
 $totalTime= ($tend - $tstart);
 $totalTime= sprintf("%2.4f s", $totalTime);
 
-$modx->log(MODX_LOG_LEVEL_INFO,"Package Built.\nExecution time: {$totalTime}");
+$modx->log(xPDO::LOG_LEVEL_INFO,"\n<br />Package Built.<br />\nExecution time: {$totalTime}\n");
 exit();
