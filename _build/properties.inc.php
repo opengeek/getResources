@@ -43,10 +43,17 @@ $properties = array(
     ),
     array(
         'name' => 'sortbyAlias',
-        'desc' => 'Query alias for sortby field. Defaults to modResource.',
+        'desc' => 'Query alias for sortby field. Defaults to an empty string.',
         'type' => 'textfield',
         'options' => '',
-        'value' => 'modResource',
+        'value' => '',
+    ),
+    array(
+        'name' => 'sortbyEscaped',
+        'desc' => 'Determines if the field name specified in sortby should be escaped. Defaults to 0.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '0',
     ),
     array(
         'name' => 'sortdir',

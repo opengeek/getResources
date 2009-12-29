@@ -4,7 +4,7 @@
  *
  * @package getResources
  * @version 1.0.0
- * @release beta
+ * @release ga
  * @author Jason Coward <modx@opengeek.com>
  */
 $mtime = microtime();
@@ -34,7 +34,7 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 /* set package info */
 define('PKG_NAME','getresources');
 define('PKG_VERSION','1.0.0');
-define('PKG_RELEASE','beta3');
+define('PKG_RELEASE','');
 
 /* load builder */
 $modx->loadClass('transport.modPackageBuilder','',false, true);
@@ -66,8 +66,11 @@ $vehicle->resolve('file',array(
 ));
 $builder->putVehicle($vehicle);
 
-/* load lexicon strings */
-//$builder->buildLexicon($sources['lexicon']);
+/* now pack in the license file, readme and setup options */
+$builder->setPackageAttributes(array(
+    'license' => file_get_contents($sources['source_core'] . '/docs/license.txt'),
+    'readme' => file_get_contents($sources['source_core'] . '/docs/readme.txt'),
+));
 
 /* zip up the package */
 $builder->pack();
@@ -79,5 +82,6 @@ $tend= $mtime;
 $totalTime= ($tend - $tstart);
 $totalTime= sprintf("%2.4f s", $totalTime);
 
-$modx->log(xPDO::LOG_LEVEL_INFO,"\n<br />Package Built.<br />\nExecution time: {$totalTime}\n");
+$modx->log(xPDO::LOG_LEVEL_INFO, "Package Built.");
+$modx->log(xPDO::LOG_LEVEL_INFO, "Execution time: {$totalTime}");
 exit();
