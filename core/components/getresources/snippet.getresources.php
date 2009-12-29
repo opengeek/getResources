@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2009, Jason Coward
- * @version 1.0.0-beta - June 26, 2009
+ * @version 1.0.0 - December 28, 2009
  *
  * TEMPLATES
  *
@@ -38,8 +38,9 @@
  * specifically set for the Resource and it is not evaluated.]
  *
  * sortby - (Opt) Field to sort by [default=publishedon]
- * sortbyAlias - (Opt) Query alias for sortby field [default=modResource]
- * sortdir  - (Opt) Order which to sort by [default=DESC]
+ * sortbyAlias - (Opt) Query alias for sortby field [default=]
+ * sortbyEscaped - (Opt) Escapes the field name specified in sortby [default=0]
+ * sortdir - (Opt) Order which to sort by [default=DESC]
  * limit - (Opt) Limits the number of resources returned [default=5]
  * offset - (Opt) An offset of resources returned by the criteria to skip [default=0]
  *
@@ -66,9 +67,9 @@ $tpl = !empty($tpl) ? $tpl : '';
 $includeContent = !empty($includeContent) ? true : false;
 $includeTVs = !empty($includeTVs) ? true : false;
 $processTVs = !empty($processTVs) ? true : false;
-$tvPrefix = !empty($tvPrefix) ? $tvPrefix : 'tv.';
-$parents = !empty($parents) ? explode(',', $parents) : array($modx->resource->get('id'));
-$depth = !empty($depth) && ($depth = intval($depth)) ? $depth : 10;
+$tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
+$parents = isset($parents) ? explode(',', $parents) : array($modx->resource->get('id'));
+$depth = isset($depth) ? (integer) $depth : 10;
 $children = array();
 foreach ($parents as $parent) {
     $pchildren = $modx->getChildIds($parent, $depth);
@@ -78,12 +79,14 @@ if (!empty($children)) $parents = array_merge($parents, $children);
 
 $tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
 
-$sortby = !empty($sortby) ? $sortby : 'publishedon';
-$sortbyAlias = !empty($sortbyAlias) ? $sortbyAlias : 'modResource';
-$sortby = "`{$sortbyAlias}`.`{$sortby}`";
-$sortdir = !empty($sortdir) ? $sortdir : 'DESC';
-$limit = !empty($limit) ? intval($limit) : 5;
-$offset = !empty($offset) ? intval($offset) : 0;
+$sortby = isset($sortby) ? $sortby : 'publishedon';
+$sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
+$sortbyEscaped = !empty($sortbyEscaped) ? true : false;
+if ($sortbyEscaped) $sortby = "`{$sortby}`";
+if (!empty($sortbyAlias)) $sortby = "`{$sortbyAlias}`.{$sortby}";
+$sortdir = isset($sortdir) ? $sortdir : 'DESC';
+$limit = isset($limit) ? (integer) $limit : 5;
+$offset = isset($offset) ? (integer) $offset : 0;
 $totalVar = !empty($totalVar) ? $totalVar : 'total';
 
 /* build query */
