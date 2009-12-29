@@ -1,6 +1,6 @@
 Changelog for getResources.
 
-getResources 1.0.0 ($LastChangedRevision$, $LastChangedDate$)
+getResources 1.0.0-ga ($LastChangedRevision$, $LastChangedDate$)
 ====================================
 - [#ADDON-81] Allow empty tvPrefix property.
 - [#ADDON-89] Allow parents property to have a value of 0.

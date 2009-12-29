@@ -1,7 +1,7 @@
 --------------------
 Snippet: getResources
 --------------------
-Version: 1.0.0
+Version: 1.0.0-ga
 Since: December 28, 2009
 Author: Jason Coward <modx@opengeek.com>
 
