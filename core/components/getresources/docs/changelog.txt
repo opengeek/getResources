@@ -1,7 +1,8 @@
 Changelog for getResources.
 
-getResources 1.1.0-beta (May 24, 2010)
+getResources 1.1.0-pl (June 28, 2010)
 ====================================
+- [#ADDON-135] Make output separator configurable via outputSeparator property
 - Add where property to allow ad hoc criteria in JSON format
 
 getResources 1.0.0-ga (December 29, 2009)

@@ -1,7 +1,7 @@
 --------------------
 Snippet: getResources
 --------------------
-Version: 1.1.0-beta
+Version: 1.1.0-pl
 Since: December 28, 2009
 Author: Jason Coward <jason@opengeek.com>
 

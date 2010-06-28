@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010, Jason Coward
- * @version 1.1.0-beta - May 24, 2010
+ * @version 1.1.0-pl - June 28, 2010
  *
  * TEMPLATES
  *
@@ -61,9 +61,11 @@
  * first - (Opt) Define the idx which represents the first resource (see tplFirst) [default=1]
  * last - (Opt) Define the idx which represents the last resource (see tplLast) [default=# of
  * resources being summarized + first - 1]
+ * outputSeparator - (Opt) An optional string to separate each tpl instance [default="\n"]
  *
  */
 $output = array();
+$outputSeparator = isset($outputSeparator) ? $outputSeparator : "\n";
 
 /* set default properties */
 $tpl = !empty($tpl) ? $tpl : '';
@@ -203,4 +205,4 @@ foreach ($collection as $resourceId => $resource) {
     }
     $idx++;
 }
-return implode("\n", $output);
+return implode($outputSeparator, $output);

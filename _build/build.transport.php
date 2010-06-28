@@ -3,8 +3,8 @@
  * getResources
  *
  * @package getResources
- * @version 1.0.0
- * @release ga
+ * @version 1.1.0
+ * @release pl
  * @author Jason Coward <modx@opengeek.com>
  */
 $mtime = microtime();
@@ -33,8 +33,8 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 /* set package info */
 define('PKG_NAME','getresources');
-define('PKG_VERSION','1.0.0');
-define('PKG_RELEASE','ga');
+define('PKG_VERSION','1.1.0');
+define('PKG_RELEASE','pl');
 
 /* load builder */
 $modx->loadClass('transport.modPackageBuilder','',false, true);
