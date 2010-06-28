@@ -1,6 +1,10 @@
 Changelog for getResources.
 
-getResources 1.0.0-ga ($LastChangedRevision$, $LastChangedDate$)
+getResources 1.1.0-beta (May 24, 2010)
+====================================
+- Add where property to allow ad hoc criteria in JSON format
+
+getResources 1.0.0-ga (December 29, 2009)
 ====================================
 - [#ADDON-81] Allow empty tvPrefix property.
 - [#ADDON-89] Allow parents property to have a value of 0.

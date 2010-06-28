@@ -5,8 +5,8 @@
  * A general purpose Resource listing and summarization snippet for MODx 2.0.
  *
  * @author Jason Coward
- * @copyright Copyright 2009, Jason Coward
- * @version 1.0.0-ga - December 28, 2009
+ * @copyright Copyright 2010, Jason Coward
+ * @version 1.1.0-beta - May 24, 2010
  *
  * TEMPLATES
  *
@@ -36,6 +36,9 @@
  * [NOTE: filtering by values uses a LIKE query and % is considered a wildcard.]
  * [NOTE: this only looks at the raw value set for specific Resource, i. e. there must be a value
  * specifically set for the Resource and it is not evaluated.]
+ *
+ * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
+ * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
  * sortby - (Opt) Field to sort by [default=publishedon]
  * sortbyAlias - (Opt) Query alias for sortby field [default=]
@@ -78,6 +81,8 @@ foreach ($parents as $parent) {
 if (!empty($children)) $parents = array_merge($parents, $children);
 
 $tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
+
+$where = !empty($where) ? $modx->fromJSON($where) : array();
 
 $sortby = isset($sortby) ? $sortby : 'publishedon';
 $sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
@@ -132,6 +137,9 @@ if (!empty($tvFilters)) {
             }
         }
     }
+}
+if (!empty($where)) {
+    $criteria->where($where);
 }
 
 $total = $modx->getCount('modResource', $criteria);
