@@ -5,7 +5,7 @@
  * @package getResources
  * @version 1.1.0
  * @release pl
- * @author Jason Coward <modx@opengeek.com>
+ * @author Jason Coward <jason@modxcms.com>
  */
 $mtime = microtime();
 $mtime = explode(" ", $mtime);
