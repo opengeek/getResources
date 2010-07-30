@@ -99,11 +99,24 @@ $totalVar = !empty($totalVar) ? $totalVar : 'total';
 
 /* build query */
 $contextResourceTbl = $modx->getTableName('modContextResource');
-$context = empty($context) ? $modx->quote($modx->context->get('key')) : $modx->quote($context);
+
+/* multiple context support */
+$modx->setLogTarget('ECHO');
+if (!empty($context)) {
+    $context = explode(',',$context);
+    $contexts = array();
+    foreach ($context as $ctx) {
+        $contexts[] = '"'.$ctx.'"';
+    }
+    $context = implode(',',$contexts);
+    unset($contexts,$ctx);
+} else {
+    $context = $modx->quote($modx->context->get('key'));
+}
 $criteria = $modx->newQuery('modResource', array(
     'deleted' => '0'
     ,"`modResource`.`parent` IN (" . implode(',', $parents) . ")"
-    ,"(`modResource`.`context_key` = {$context} OR EXISTS(SELECT 1 FROM {$contextResourceTbl} `ctx` WHERE `ctx`.`resource` = `modResource`.`id` AND `ctx`.`context_key` = {$context}))"
+    ,"(`modResource`.`context_key` IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} `ctx` WHERE `ctx`.`resource` = `modResource`.`id` AND `ctx`.`context_key` IN ({$context})))"
 ));
 if (empty($showUnpublished)) {
     $criteria->andCondition(array('published' => '1'));
