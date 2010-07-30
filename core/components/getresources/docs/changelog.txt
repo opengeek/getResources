@@ -1,6 +1,6 @@
 Changelog for getResources.
 
-getResources 1.1.0-pl (June 28, 2010)
+getResources 1.1.0-pl (July 30, 2010)
 ====================================
 - Added &toPlaceholder property for assigning results to a placeholder
 - Added &resources property for including/excluding specific resources
