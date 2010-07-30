@@ -162,7 +162,7 @@ $first = empty($first) && $first !== '0' ? 1 : intval($first);
 $last = empty($last) ? (count($collection) + $idx - 1) : intval($last);
 
 /* include parseTpl */
-include_once $modx->getOption('core_path').'components/getresources/include.parsetpl.php';
+include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
 
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
