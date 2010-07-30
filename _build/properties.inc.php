@@ -172,7 +172,14 @@ $properties = array(
     ),
     array(
         'name' => 'last',
-        'desc' => ' Define the idx which represents the last resource (see tplLast). Defaults to the number of resources being summarized + first - 1',
+        'desc' => 'Define the idx which represents the last resource (see tplLast). Defaults to the number of resources being summarized + first - 1',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
+        'name' => 'toPlaceholder',
+        'desc' => 'If set, will assign the result to this placeholder instead of outputting it directly.',
         'type' => 'textfield',
         'options' => '',
         'value' => '',
