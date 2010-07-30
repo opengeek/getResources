@@ -115,6 +115,27 @@ $properties = array(
         'value' => false,
     ),
     array(
+        'name' => 'showHidden',
+        'desc' => 'Indicates if Resources that are hidden from menus should be shown. Defaults to false.',
+        'type' => 'combo-boolean',
+        'options' => '',
+        'value' => false,
+    ),
+    array(
+        'name' => 'showUnpublished',
+        'desc' => 'Indicates if Resources that are unpublished should be shown. Defaults to false.',
+        'type' => 'combo-boolean',
+        'options' => '',
+        'value' => false,
+    ),
+    array(
+        'name' => 'showDeleted',
+        'desc' => 'Indicates if Resources that are deleted should be shown. Defaults to false.',
+        'type' => 'combo-boolean',
+        'options' => '',
+        'value' => false,
+    ),
+    array(
         'name' => 'processTVs',
         'desc' => 'Indicates if TemplateVar values should be rendered as they would on the resource being summarized. Defaults to false.',
         'type' => 'combo-boolean',

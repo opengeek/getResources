@@ -86,6 +86,7 @@ $tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
 
 $where = !empty($where) ? $modx->fromJSON($where) : array();
 $showUnpublished = !empty($showUnpublished) ? true : false;
+$showDeleted = !empty($showDeleted) ? true : false;
 
 $sortby = isset($sortby) ? $sortby : 'publishedon';
 $sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
@@ -101,12 +102,11 @@ $totalVar = !empty($totalVar) ? $totalVar : 'total';
 $contextResourceTbl = $modx->getTableName('modContextResource');
 
 /* multiple context support */
-$modx->setLogTarget('ECHO');
 if (!empty($context)) {
     $context = explode(',',$context);
     $contexts = array();
     foreach ($context as $ctx) {
-        $contexts[] = '"'.$ctx.'"';
+        $contexts[] = $modx->quote($ctx);
     }
     $context = implode(',',$contexts);
     unset($contexts,$ctx);
@@ -114,10 +114,12 @@ if (!empty($context)) {
     $context = $modx->quote($modx->context->get('key'));
 }
 $criteria = $modx->newQuery('modResource', array(
-    'deleted' => '0'
-    ,"`modResource`.`parent` IN (" . implode(',', $parents) . ")"
+    "`modResource`.`parent` IN (" . implode(',', $parents) . ")"
     ,"(`modResource`.`context_key` IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} `ctx` WHERE `ctx`.`resource` = `modResource`.`id` AND `ctx`.`context_key` IN ({$context})))"
 ));
+if (empty($showDeleted)) {
+    $criteria->andCondition(array('deleted' => '0'));
+}
 if (empty($showUnpublished)) {
     $criteria->andCondition(array('published' => '1'));
 }
