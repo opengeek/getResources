@@ -85,6 +85,7 @@ if (!empty($children)) $parents = array_merge($parents, $children);
 $tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
 
 $where = !empty($where) ? $modx->fromJSON($where) : array();
+$showUnpublished = !empty($showUnpublished) ? true : false;
 
 $sortby = isset($sortby) ? $sortby : 'publishedon';
 $sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
@@ -101,10 +102,12 @@ $contextResourceTbl = $modx->getTableName('modContextResource');
 $context = empty($context) ? $modx->quote($modx->context->get('key')) : $modx->quote($context);
 $criteria = $modx->newQuery('modResource', array(
     'deleted' => '0'
-    ,'published' => '1'
     ,"`modResource`.`parent` IN (" . implode(',', $parents) . ")"
     ,"(`modResource`.`context_key` = {$context} OR EXISTS(SELECT 1 FROM {$contextResourceTbl} `ctx` WHERE `ctx`.`resource` = `modResource`.`id` AND `ctx`.`context_key` = {$context}))"
 ));
+if (empty($showUnpublished)) {
+    $criteria->andCondition(array('published' => '1'));
+}
 if (empty($showHidden)) {
     $criteria->andCondition(array('hidemenu' => '0'));
 }
