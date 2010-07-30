@@ -2,6 +2,7 @@ Changelog for getResources.
 
 getResources 1.1.0-pl (June 28, 2010)
 ====================================
+- Added &showUnpublish property
 - Added getresources.core_path reference for easier development
 - [#ADDON-135] Make output separator configurable via outputSeparator property
 - Add where property to allow ad hoc criteria in JSON format
