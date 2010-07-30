@@ -2,6 +2,7 @@ Changelog for getResources.
 
 getResources 1.1.0-pl (June 28, 2010)
 ====================================
+- Added &resources property for including/excluding specific resources
 - Added &showDeleted property
 - Allow multiple contexts to be passed into &context
 - Added &showUnpublish property

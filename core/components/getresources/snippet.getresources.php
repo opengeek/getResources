@@ -102,6 +102,7 @@ $totalVar = !empty($totalVar) ? $totalVar : 'total';
 $contextResourceTbl = $modx->getTableName('modContextResource');
 
 /* multiple context support */
+$modx->setLogTarget('ECHO');
 if (!empty($context)) {
     $context = explode(',',$context);
     $contexts = array();
@@ -128,6 +129,27 @@ if (empty($showHidden)) {
 }
 if (!empty($hideContainers)) {
     $criteria->andCondition(array('isfolder' => '0'));
+}
+/* include/exclude resources, via &resources=`123,-456` prop */
+if (!empty($resources)) {
+    $resources = explode(',',$resources);
+    $include = array();
+    $exclude = array();
+    foreach ($resources as $resource) {
+        $resource = (int)$resource;
+        if ($resource == 0) continue;
+        if ($resource < 0) {
+            $exclude[] = abs($resource);
+        } else {
+            $include[] = $resource;
+        }
+    }
+    if (!empty($include)) {
+        $criteria->orCondition(array('modResource.id:IN' => $include),null,10);
+    }
+    if (!empty($exclude)) {
+        $criteria->andCondition(array('modResource.id NOT IN ('.implode(',',$exclude).')'));
+    }
 }
 if (!empty($tvFilters)) {
     $tmplVarTbl = $modx->getTableName('modTemplateVar');

@@ -136,6 +136,13 @@ $properties = array(
         'value' => false,
     ),
     array(
+        'name' => 'resources',
+        'desc' => 'A comma-separated list of resource IDs to exclude or include. IDs with a - in front mean to exclude. Ex: 123,-456 means to include Resource 123, but always exclude Resource 456.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'processTVs',
         'desc' => 'Indicates if TemplateVar values should be rendered as they would on the resource being summarized. Defaults to false.',
         'type' => 'combo-boolean',
