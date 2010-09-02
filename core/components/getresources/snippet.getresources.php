@@ -72,9 +72,9 @@ $tpl = !empty($tpl) ? $tpl : '';
 $includeContent = !empty($includeContent) ? true : false;
 $includeTVs = !empty($includeTVs) ? true : false;
 $processTVs = !empty($processTVs) ? true : false;
-$tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
-$parents = isset($parents) ? explode(',', $parents) : array($modx->resource->get('id'));
-$depth = isset($depth) ? (integer) $depth : 10;
+$tvPrefix = !empty($tvPrefix) ? $tvPrefix : 'tv.';
+$parents = !empty($parents) ? explode(',', $parents) : array($modx->resource->get('id'));
+$depth = !empty($depth) ? (integer) $depth : 10;
 $children = array();
 foreach ($parents as $parent) {
     $pchildren = $modx->getChildIds($parent, $depth);

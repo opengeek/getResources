@@ -1,5 +1,10 @@
 Changelog for getResources.
 
+- [opengeek/getResources#12] Debug initial parameters as [proposed by goldsky][12]
+- [opengeek/getResources#10] Fix PHP error when &parents is unset
+
+  [12]: http://modxcms.com/forums/index.php/topic,52337.msg307632.html#msg307632
+
 getResources 1.1.0-pl (July 30, 2010)
 ====================================
 - Added &toPlaceholder property for assigning results to a placeholder
