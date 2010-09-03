@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+- [#10] Fix PHP error when &parents is unset
+
 getResources 1.1.0-pl (July 30, 2010)
 ====================================
 - Added &toPlaceholder property for assigning results to a placeholder

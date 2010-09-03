@@ -23,7 +23,7 @@
  *
  * SELECTION
  *
- * parents - Comma-delimited list of ids serving as parents
+ * parents - (Opt) Comma-delimited list of ids serving as parents [default=currentId]
  *
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
@@ -73,7 +73,7 @@ $includeContent = !empty($includeContent) ? true : false;
 $includeTVs = !empty($includeTVs) ? true : false;
 $processTVs = !empty($processTVs) ? true : false;
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
-$parents = isset($parents) ? explode(',', $parents) : array($modx->resource->get('id'));
+$parents = (!empty($parents) or $parents==="0") ? explode(',', $parents) : array($modx->resource->get('id'));
 $depth = isset($depth) ? (integer) $depth : 10;
 $children = array();
 foreach ($parents as $parent) {
