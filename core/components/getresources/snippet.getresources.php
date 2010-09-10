@@ -74,6 +74,7 @@ $includeTVs = !empty($includeTVs) ? true : false;
 $processTVs = !empty($processTVs) ? true : false;
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
 $parents = isset($parents) ? explode(',', $parents) : array($modx->resource->get('id'));
+$templates = !empty($templates) ? explode(',', $templates) : false;
 $depth = isset($depth) ? (integer) $depth : 10;
 $children = array();
 foreach ($parents as $parent) {
@@ -129,6 +130,9 @@ if (empty($showHidden)) {
 }
 if (!empty($hideContainers)) {
     $criteria->andCondition(array('isfolder' => '0'));
+}
+if (!empty($templates)) {
+  $criteria->andCondition(array('template IN (' .implode(',', $templates).')'));
 }
 /* include/exclude resources, via &resources=`123,-456` prop */
 if (!empty($resources)) {
