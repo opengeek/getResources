@@ -2,6 +2,7 @@ Changelog for getResources.
 
 getResources 1.2.0-pl (September 25, 2010)
 ====================================
+- Allow empty &sortby
 - Add ability to sort by a single Template Variable value (or default value)
 
 getResources 1.1.0-pl (July 30, 2010)

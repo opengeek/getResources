@@ -204,7 +204,7 @@ if (!empty($sortbyTV)) {
     $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
     $criteria->sortby("`sortTV`", $sortdirTV);
 }
-$criteria->sortby($sortby, $sortdir);
+if (!empty($sortby)) $criteria->sortby($sortby, $sortdir);
 if (!empty($limit)) $criteria->limit($limit, $offset);
 
 if (!empty($debug)) {
