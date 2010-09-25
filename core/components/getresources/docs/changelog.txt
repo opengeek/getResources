@@ -1,5 +1,9 @@
 Changelog for getResources.
 
+getResources 1.2.0-pl (September 25, 2010)
+====================================
+- Add ability to sort by a single Template Variable value (or default value)
+
 getResources 1.1.0-pl (July 30, 2010)
 ====================================
 - Added &toPlaceholder property for assigning results to a placeholder
