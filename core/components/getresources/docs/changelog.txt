@@ -2,6 +2,7 @@ Changelog for getResources.
 
 getResources 1.2.0-pl (September 25, 2010)
 ====================================
+- Fix error when &parents is not set
 - Allow empty &sortby
 - Add ability to sort by a single Template Variable value (or default value)
 

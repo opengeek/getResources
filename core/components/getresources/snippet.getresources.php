@@ -75,7 +75,7 @@ $includeContent = !empty($includeContent) ? true : false;
 $includeTVs = !empty($includeTVs) ? true : false;
 $processTVs = !empty($processTVs) ? true : false;
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
-$parents = isset($parents) ? explode(',', $parents) : array($modx->resource->get('id'));
+$parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
 $depth = isset($depth) ? (integer) $depth : 10;
 $children = array();
 foreach ($parents as $parent) {
