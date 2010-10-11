@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010, Jason Coward
- * @version 1.2.0-pl - September 25, 2010
+ * @version 1.2.1-pl - October 11, 2010
  *
  * TEMPLATES
  *
@@ -106,7 +106,6 @@ $totalVar = !empty($totalVar) ? $totalVar : 'total';
 $contextResourceTbl = $modx->getTableName('modContextResource');
 
 /* multiple context support */
-$modx->setLogTarget('ECHO');
 if (!empty($context)) {
     $context = explode(',',$context);
     $contexts = array();

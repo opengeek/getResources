@@ -1,5 +1,9 @@
 Changelog for getResources.
 
+getResources 1.2.1-pl (October 11, 2010)
+====================================
+- Remove inadvertent call to modX::setLogTarget('ECHO')
+
 getResources 1.2.0-pl (September 25, 2010)
 ====================================
 - Fix error when &parents is not set
