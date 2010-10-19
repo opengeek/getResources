@@ -1,5 +1,8 @@
 Changelog for getResources.
 
+getResources 1.2.2-pl (October 18, 2010)
+====================================
+
 getResources 1.2.1-pl (October 11, 2010)
 ====================================
 - Remove inadvertent call to modX::setLogTarget('ECHO')
