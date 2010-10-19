@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+- [#19] Fix sortbyTV returning duplicate rows
+
 getResources 1.2.1-pl (October 11, 2010)
 ====================================
 - Remove inadvertent call to modX::setLogTarget('ECHO')
