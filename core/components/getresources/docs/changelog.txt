@@ -2,6 +2,7 @@ Changelog for getResources.
 
 getResources 1.2.2-pl (October 18, 2010)
 ====================================
+- [#19] Fix sortbyTV returning duplicate rows
 
 getResources 1.2.1-pl (October 11, 2010)
 ====================================

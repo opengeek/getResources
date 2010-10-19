@@ -193,11 +193,11 @@ $modx->setPlaceholder($totalVar, $total);
 $columns = $includeContent ? $modx->getSelectColumns('modResource', 'modResource') : $modx->getSelectColumns('modResource', 'modResource', '', array('content'), true);
 $criteria->select($columns);
 if (!empty($sortbyTV)) {
-    $criteria->leftJoin('modTemplateVarResource', 'tvSort', array(
-        "tvSort.contentid = modResource.id"
-    ));
     $criteria->leftJoin('modTemplateVar', 'tvDefault', array(
-        "tvDefault.name" => $sortbyTV,
+        "tvDefault.name" => $sortbyTV
+    ));
+    $criteria->leftJoin('modTemplateVarResource', 'tvSort', array(
+        "`tvSort`.`contentid` = `modResource`.`id`",
         "`tvSort`.`tmplvarid` = `tvDefault`.`id`"
     ));
     $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
