@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010, Jason Coward
- * @version 1.2.1-pl - October 11, 2010
+ * @version 1.2.2-pl - October 18, 2010
  *
  * TEMPLATES
  *
