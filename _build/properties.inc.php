@@ -202,6 +202,13 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'toSeparatePlaceholders',
+        'desc' => 'If set, will assign EACH result to a separate placeholder named by this param suffixed with a sequential number (starting from 0).',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'debug',
         'desc' => 'If true, will send the SQL query to the MODx log. Defaults to false.',
         'type' => 'combo-boolean',
