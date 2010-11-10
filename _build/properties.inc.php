@@ -42,6 +42,13 @@ $properties = array(
         'value' => 'publishedon',
     ),
     array(
+        'name' => 'sortbyTV',
+        'desc' => 'Name of a Template Variable to sort by. Defaults to empty string.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'sortbyAlias',
         'desc' => 'Query alias for sortby field. Defaults to an empty string.',
         'type' => 'textfield',
@@ -58,6 +65,16 @@ $properties = array(
     array(
         'name' => 'sortdir',
         'desc' => 'Order which to sort by. Defaults to DESC.',
+        'type' => 'list',
+        'options' => array(
+            array('text' => 'ASC','vaue' => 'ASC'),
+            array('text' => 'DESC','value' => 'DESC'),
+        ),
+        'value' => 'DESC',
+    ),
+    array(
+        'name' => 'sortdirTV',
+        'desc' => 'Order which to sort a Template Variable by. Defaults to DESC.',
         'type' => 'list',
         'options' => array(
             array('text' => 'ASC','vaue' => 'ASC'),

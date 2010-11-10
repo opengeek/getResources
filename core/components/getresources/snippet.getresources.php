@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010, Jason Coward
- * @version 1.1.0-pl - June 28, 2010
+ * @version 1.2.2-pl - October 18, 2010
  *
  * TEMPLATES
  *
@@ -41,9 +41,11 @@
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
  * sortby - (Opt) Field to sort by [default=publishedon]
+ * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
  * sortbyAlias - (Opt) Query alias for sortby field [default=]
  * sortbyEscaped - (Opt) Escapes the field name specified in sortby [default=0]
  * sortdir - (Opt) Order which to sort by [default=DESC]
+ * sortdirTV - (Opt) Order which to sort by a TV [default=DESC]
  * limit - (Opt) Limits the number of resources returned [default=5]
  * offset - (Opt) An offset of resources returned by the criteria to skip [default=0]
  *
@@ -73,7 +75,7 @@ $includeContent = !empty($includeContent) ? true : false;
 $includeTVs = !empty($includeTVs) ? true : false;
 $processTVs = !empty($processTVs) ? true : false;
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
-$parents = (!empty($parents) or $parents==="0") ? explode(',', $parents) : array($modx->resource->get('id'));
+$parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
 $depth = isset($depth) ? (integer) $depth : 10;
 $children = array();
 foreach ($parents as $parent) {
@@ -89,11 +91,13 @@ $showUnpublished = !empty($showUnpublished) ? true : false;
 $showDeleted = !empty($showDeleted) ? true : false;
 
 $sortby = isset($sortby) ? $sortby : 'publishedon';
+$sortbyTV = isset($sortbyTV) ? $sortbyTV : '';
 $sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
 $sortbyEscaped = !empty($sortbyEscaped) ? true : false;
 if ($sortbyEscaped) $sortby = "`{$sortby}`";
 if (!empty($sortbyAlias)) $sortby = "`{$sortbyAlias}`.{$sortby}";
 $sortdir = isset($sortdir) ? $sortdir : 'DESC';
+$sortdirTV = isset($sortdirTV) ? $sortdirTV : 'DESC';
 $limit = isset($limit) ? (integer) $limit : 5;
 $offset = isset($offset) ? (integer) $offset : 0;
 $totalVar = !empty($totalVar) ? $totalVar : 'total';
@@ -102,7 +106,6 @@ $totalVar = !empty($totalVar) ? $totalVar : 'total';
 $contextResourceTbl = $modx->getTableName('modContextResource');
 
 /* multiple context support */
-$modx->setLogTarget('ECHO');
 if (!empty($context)) {
     $context = explode(',',$context);
     $contexts = array();
@@ -187,10 +190,22 @@ if (!empty($where)) {
 $total = $modx->getCount('modResource', $criteria);
 $modx->setPlaceholder($totalVar, $total);
 
-$criteria->sortby($sortby, $sortdir);
-if (!empty($limit)) $criteria->limit($limit, $offset);
-$columns = $includeContent ? '*' : $modx->getSelectColumns('modResource', 'modResource', '', array('content'), true);
+$columns = $includeContent ? $modx->getSelectColumns('modResource', 'modResource') : $modx->getSelectColumns('modResource', 'modResource', '', array('content'), true);
 $criteria->select($columns);
+if (!empty($sortbyTV)) {
+    $criteria->leftJoin('modTemplateVar', 'tvDefault', array(
+        "tvDefault.name" => $sortbyTV
+    ));
+    $criteria->leftJoin('modTemplateVarResource', 'tvSort', array(
+        "`tvSort`.`contentid` = `modResource`.`id`",
+        "`tvSort`.`tmplvarid` = `tvDefault`.`id`"
+    ));
+    $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
+    $criteria->sortby("`sortTV`", $sortdirTV);
+}
+if (!empty($sortby)) $criteria->sortby($sortby, $sortdir);
+if (!empty($limit)) $criteria->limit($limit, $offset);
+
 if (!empty($debug)) {
     $criteria->prepare();
     $modx->log(modX::LOG_LEVEL_ERROR, $criteria->toSQL());
