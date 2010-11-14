@@ -25,6 +25,11 @@
  *
  * parents - (Opt) Comma-delimited list of ids serving as parents [default=currentId]
  *
+ * resources - (Opt) Comma-delimited list of ids for resources, which will be
+ * included (positive integer) or excluded (negative integer) from the output
+ * collection.  Example: &resources=`1, 2, -3` will include resources of id 1
+ * and 2 and exclude resource of id 3.
+ *
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
@@ -40,7 +45,9 @@
  * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
- * sortby - (Opt) Field to sort by [default=publishedon]
+ * sortby - (Opt) Field to sort by [default=publishedon]. &sortby=`resources`
+ * limits to and orders collection by contents of the `resources` parameter.
+ *
  * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
  * sortbyAlias - (Opt) Query alias for sortby field [default=]
  * sortbyEscaped - (Opt) Escapes the field name specified in sortby [default=0]
@@ -203,7 +210,7 @@ if (!empty($sortbyTV)) {
     $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
     $criteria->sortby("`sortTV`", $sortdirTV);
 }
-if (!empty($sortby)) $criteria->sortby($sortby, $sortdir);
+if (!empty($sortby) && $sortby !== 'resources') $criteria->sortby($sortby, $sortdir);
 if (!empty($limit)) $criteria->limit($limit, $offset);
 
 if (!empty($debug)) {
@@ -211,6 +218,25 @@ if (!empty($debug)) {
     $modx->log(modX::LOG_LEVEL_ERROR, $criteria->toSQL());
 }
 $collection = $modx->getCollection('modResource', $criteria);
+
+/* Sort and filter $collection by $resources */
+if(!function_exists('sortCollectionByResources')) {
+    function sortCollectionByResources (array $collection, array $resources) {
+        # Ensure $resources values are comparable with $collection keys
+        $resources = array_map('intval', $resources);
+        $collectionOrderedKeys = array_intersect_key(array_flip($resources), $collection);
+        $collectionFiltered = array_intersect_key($collection, $collectionOrderedKeys);
+        # Convert $collection keys to strings to prevent them from being renumbered on merge
+        $collectionOrderedKeysStr = array_flip(array_map('md5', array_flip($collectionOrderedKeys)));
+        $collectionFilteredKeysStr = array_map('md5', array_keys($collectionFiltered));
+        $collection = array_merge($collectionOrderedKeysStr, array_combine($collectionFilteredKeysStr, $collectionFiltered));
+        # Recover orginal keys and return
+        return array_combine(array_flip($collectionOrderedKeys), $collection);
+    }
+}
+
+if($sortby === 'resources')
+    $collection = sortCollectionByResources($collection, $resources);
 
 $idx = !empty($idx) ? intval($idx) : 1;
 $first = empty($first) && $first !== '0' ? 1 : intval($first);
