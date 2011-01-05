@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+- [#22] Add &toSeparatePlaceholders property for splitting output
+
 getResources 1.2.2-pl (October 18, 2010)
 ====================================
 - [#19] Fix sortbyTV returning duplicate rows

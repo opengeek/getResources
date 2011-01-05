@@ -262,6 +262,12 @@ foreach ($collection as $resourceId => $resource) {
 }
 
 /* output */
+$toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders',$scriptProperties,false);
+if (!empty($toSeparatePlaceholders)) {
+    $modx->setPlaceholders($output,$toSeparatePlaceholders);
+    return '';
+}
+
 $output = implode($outputSeparator, $output);
 $toPlaceholder = $modx->getOption('toPlaceholder',$scriptProperties,false);
 if (!empty($toPlaceholder)) {
