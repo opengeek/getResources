@@ -94,7 +94,6 @@ $sortby = isset($sortby) ? $sortby : 'publishedon';
 $sortbyTV = isset($sortbyTV) ? $sortbyTV : '';
 $sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
 $sortbyEscaped = !empty($sortbyEscaped) ? true : false;
-if (!empty($sortbyAlias)) $sortby = $modx->escape($sortbyAlias) . ".{$sortby}";
 $sortdir = isset($sortdir) ? $sortdir : 'DESC';
 $sortdirTV = isset($sortdirTV) ? $sortdirTV : 'DESC';
 $limit = isset($limit) ? (integer) $limit : 5;
@@ -215,6 +214,7 @@ if (!empty($sortby)) {
     if (is_array($sorts)) {
         while (list($sort, $dir) = each($sorts)) {
             if ($sortbyEscaped) $sort = $modx->escape($sort);
+            if (!empty($sortbyAlias)) $sort = $modx->escape($sortbyAlias) . ".{$sort}";
             $criteria->sortby($sort, $dir);
         }
     }
