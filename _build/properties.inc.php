@@ -36,7 +36,7 @@ $properties = array(
     ),
     array(
         'name' => 'sortby',
-        'desc' => 'Field to sort by. Defaults to publishedon.',
+        'desc' => 'A field name to sort by or JSON object of field names and sortdir for each field, e.g. {"publishedon":"ASC","createdon":"DESC"}. Defaults to publishedon.',
         'type' => 'textfield',
         'options' => '',
         'value' => 'publishedon',
