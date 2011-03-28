@@ -28,7 +28,7 @@
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
- * delimiters and two value search formats. THe first delimeter || represents a logical OR and the
+ * delimiters and two value search formats. THe first delimiter || represents a logical OR and the
  * primary grouping mechanism.  Within each group you can provide a comma-delimited list of values.
  * These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the
  * value, indicating you are searching for the value in any TemplateVar tied to the Resource. An
