@@ -49,6 +49,18 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'sortbyTVType',
+        'desc' => 'An optional type to indicate how to sort on the Template Variable value.',
+        'type' => 'list',
+        'options' => array(
+            array('text' => 'string', 'value' => 'string'),
+            array('text' => 'integer', 'value' => 'integer'),
+            array('text' => 'decimal', 'value' => 'decimal'),
+            array('text' => 'datetime', 'value' => 'datetime'),
+        ),
+        'value' => 'string',
+    ),
+    array(
         'name' => 'sortbyAlias',
         'desc' => 'Query alias for sortby field. Defaults to an empty string.',
         'type' => 'textfield',

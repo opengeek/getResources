@@ -42,6 +42,7 @@
  *
  * sortby - (Opt) Field to sort by or a JSON array, e.g. {"publishedon":"ASC","createdon":"DESC"} [default=publishedon]
  * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
+ * sortbyTVType - (Opt) A data type to CAST a TV Value to in order to sort on it properly [default=string]
  * sortbyAlias - (Opt) Query alias for sortby field [default=]
  * sortbyEscaped - (Opt) Escapes the field name(s) specified in sortby [default=0]
  * sortdir - (Opt) Order which to sort by [default=DESC]
@@ -202,8 +203,41 @@ if (!empty($sortbyTV)) {
         "tvSort.contentid = modResource.id",
         "tvSort.tmplvarid = tvDefault.id"
     ));
-    $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
-    $criteria->sortby("`sortTV`", $sortdirTV);
+    if (empty($sortbyTVType)) $sortbyTVType = 'string';
+    if ($modx->getOption('dbtype') === 'mysql') {
+        switch ($sortbyTVType) {
+            case 'integer':
+                $criteria->select("CAST(IFNULL(tvSort.value, tvDefault.default_text) AS SIGNED INTEGER) AS sortTV");
+                break;
+            case 'decimal':
+                $criteria->select("CAST(IFNULL(tvSort.value, tvDefault.default_text) AS DECIMAL) AS sortTV");
+                break;
+            case 'datetime':
+                $criteria->select("CAST(IFNULL(tvSort.value, tvDefault.default_text) AS DATETIME) AS sortTV");
+                break;
+            case 'string':
+            default:
+                $criteria->select("IFNULL(tvSort.value, tvDefault.default_text) AS sortTV");
+                break;
+        }
+    } elseif ($modx->getOption('dbtype') === 'sqlsrv') {
+        switch ($sortbyTVType) {
+            case 'integer':
+                $criteria->select("CAST(ISNULL(tvSort.value, tvDefault.default_text) AS BIGINT) AS sortTV");
+                break;
+            case 'decimal':
+                $criteria->select("CAST(ISNULL(tvSort.value, tvDefault.default_text) AS DECIMAL) AS sortTV");
+                break;
+            case 'datetime':
+                $criteria->select("CAST(ISNULL(tvSort.value, tvDefault.default_text) AS DATETIME) AS sortTV");
+                break;
+            case 'string':
+            default:
+                $criteria->select("ISNULL(tvSort.value, tvDefault.default_text) AS sortTV");
+                break;
+        }
+    }
+    $criteria->sortby("sortTV", $sortdirTV);
 }
 if (!empty($sortby)) {
     if (strpos($sortby, '{') === 0) {
