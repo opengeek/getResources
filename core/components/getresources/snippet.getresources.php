@@ -116,8 +116,8 @@ if (!empty($context)) {
     $context = $modx->quote($modx->context->get('key'));
 }
 $criteria = $modx->newQuery('modResource', array(
-    "`modResource`.`parent` IN (" . implode(',', $parents) . ")"
-    ,"(`modResource`.`context_key` IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} `ctx` WHERE `ctx`.`resource` = `modResource`.`id` AND `ctx`.`context_key` IN ({$context})))"
+    "modResource.parent IN (" . implode(',', $parents) . ")"
+    ,"(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))"
 ));
 if (empty($showDeleted)) {
     $criteria->andCondition(array('deleted' => '0'));
@@ -164,10 +164,10 @@ if (!empty($tvFilters)) {
             if (count($f) == 2) {
                 $tvName = $modx->quote($f[0]);
                 $tvValue = $modx->quote($f[1]);
-                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} `tvr` JOIN {$tmplVarTbl} `tv` ON `tvr`.`value` LIKE {$tvValue} AND `tv`.`name` = {$tvName} AND `tv`.`id` = `tvr`.`tmplvarid` WHERE `tvr`.`contentid` = `modResource`.`id`)";
+                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
             } elseif (count($f) == 1) {
                 $tvValue = $modx->quote($f[0]);
-                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} `tvr` JOIN {$tmplVarTbl} `tv` ON `tvr`.`value` LIKE {$tvValue} AND `tv`.`id` = `tvr`.`tmplvarid` WHERE `tvr`.`contentid` = `modResource`.`id`)";
+                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
             }
         }
     }
@@ -199,8 +199,8 @@ if (!empty($sortbyTV)) {
         "tvDefault.name" => $sortbyTV
     ));
     $criteria->leftJoin('modTemplateVarResource', 'tvSort', array(
-        "`tvSort`.`contentid` = `modResource`.`id`",
-        "`tvSort`.`tmplvarid` = `tvDefault`.`id`"
+        "tvSort.contentid = modResource.id",
+        "tvSort.tmplvarid = tvDefault.id"
     ));
     $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
     $criteria->sortby("`sortTV`", $sortdirTV);
