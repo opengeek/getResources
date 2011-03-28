@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- [#4] Support multiple sortby fields via JSON object
 - Use get() instead to toArray() if includeContent is false
 - [#22] Add &toSeparatePlaceholders property for splitting output
 

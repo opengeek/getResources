@@ -40,10 +40,10 @@
  * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
- * sortby - (Opt) Field to sort by [default=publishedon]
+ * sortby - (Opt) Field to sort by or a JSON array, e.g. {"publishedon":"ASC","createdon":"DESC"} [default=publishedon]
  * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
  * sortbyAlias - (Opt) Query alias for sortby field [default=]
- * sortbyEscaped - (Opt) Escapes the field name specified in sortby [default=0]
+ * sortbyEscaped - (Opt) Escapes the field name(s) specified in sortby [default=0]
  * sortdir - (Opt) Order which to sort by [default=DESC]
  * sortdirTV - (Opt) Order which to sort by a TV [default=DESC]
  * limit - (Opt) Limits the number of resources returned [default=5]
@@ -94,8 +94,7 @@ $sortby = isset($sortby) ? $sortby : 'publishedon';
 $sortbyTV = isset($sortbyTV) ? $sortbyTV : '';
 $sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
 $sortbyEscaped = !empty($sortbyEscaped) ? true : false;
-if ($sortbyEscaped) $sortby = "`{$sortby}`";
-if (!empty($sortbyAlias)) $sortby = "`{$sortbyAlias}`.{$sortby}";
+if (!empty($sortbyAlias)) $sortby = $modx->escape($sortbyAlias) . ".{$sortby}";
 $sortdir = isset($sortdir) ? $sortdir : 'DESC';
 $sortdirTV = isset($sortdirTV) ? $sortdirTV : 'DESC';
 $limit = isset($limit) ? (integer) $limit : 5;
@@ -207,7 +206,19 @@ if (!empty($sortbyTV)) {
     $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
     $criteria->sortby("`sortTV`", $sortdirTV);
 }
-if (!empty($sortby)) $criteria->sortby($sortby, $sortdir);
+if (!empty($sortby)) {
+    if (strpos($sortby, '{') === 0) {
+        $sorts = $modx->fromJSON($sortby);
+    } else {
+        $sorts = array($sortby => $sortdir);
+    }
+    if (is_array($sorts)) {
+        while (list($sort, $dir) = each($sorts)) {
+            if ($sortbyEscaped) $sort = $modx->escape($sort);
+            $criteria->sortby($sort, $dir);
+        }
+    }
+}
 if (!empty($limit)) $criteria->limit($limit, $offset);
 
 if (!empty($debug)) {
