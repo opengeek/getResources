@@ -67,7 +67,7 @@ $properties = array(
         'desc' => 'Order which to sort by. Defaults to DESC.',
         'type' => 'list',
         'options' => array(
-            array('text' => 'ASC','vaue' => 'ASC'),
+            array('text' => 'ASC','value' => 'ASC'),
             array('text' => 'DESC','value' => 'DESC'),
         ),
         'value' => 'DESC',
@@ -77,7 +77,7 @@ $properties = array(
         'desc' => 'Order which to sort a Template Variable by. Defaults to DESC.',
         'type' => 'list',
         'options' => array(
-            array('text' => 'ASC','vaue' => 'ASC'),
+            array('text' => 'ASC','value' => 'ASC'),
             array('text' => 'DESC','value' => 'DESC'),
         ),
         'value' => 'DESC',
