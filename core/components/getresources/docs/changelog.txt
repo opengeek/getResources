@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- Use get() instead to toArray() if includeContent is false
 - [#22] Add &toSeparatePlaceholders property for splitting output
 
 getResources 1.2.2-pl (October 18, 2010)

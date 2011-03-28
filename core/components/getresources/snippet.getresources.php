@@ -190,6 +190,10 @@ if (!empty($where)) {
 $total = $modx->getCount('modResource', $criteria);
 $modx->setPlaceholder($totalVar, $total);
 
+$fields = array_keys($modx->getFields('modResource'));
+if (empty($includeContent)) {
+    $fields = array_diff($fields, array('content'));
+}
 $columns = $includeContent ? $modx->getSelectColumns('modResource', 'modResource') : $modx->getSelectColumns('modResource', 'modResource', '', array('content'), true);
 $criteria->select($columns);
 if (!empty($sortbyTV)) {
@@ -235,7 +239,7 @@ foreach ($collection as $resourceId => $resource) {
             ,'first' => $first
             ,'last' => $last
         )
-        ,$resource->toArray()
+        ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
     $resourceTpl = '';
