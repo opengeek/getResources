@@ -2,11 +2,11 @@
 /**
  * getResources
  *
- * A general purpose Resource listing and summarization snippet for MODx 2.0.
+ * A general purpose Resource listing and summarization snippet for MODX 2.x.
  *
  * @author Jason Coward
- * @copyright Copyright 2010, Jason Coward
- * @version 1.2.2-pl - October 18, 2010
+ * @copyright Copyright 2010-2011, Jason Coward
+ * @version 1.3.0-pl - March 28, 2011
  *
  * TEMPLATES
  *
