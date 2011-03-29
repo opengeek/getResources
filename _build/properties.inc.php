@@ -36,7 +36,7 @@ $properties = array(
     ),
     array(
         'name' => 'sortby',
-        'desc' => 'Field to sort by. Defaults to publishedon.',
+        'desc' => 'A field name to sort by or JSON object of field names and sortdir for each field, e.g. {"publishedon":"ASC","createdon":"DESC"}. Defaults to publishedon.',
         'type' => 'textfield',
         'options' => '',
         'value' => 'publishedon',
@@ -47,6 +47,18 @@ $properties = array(
         'type' => 'textfield',
         'options' => '',
         'value' => '',
+    ),
+    array(
+        'name' => 'sortbyTVType',
+        'desc' => 'An optional type to indicate how to sort on the Template Variable value.',
+        'type' => 'list',
+        'options' => array(
+            array('text' => 'string', 'value' => 'string'),
+            array('text' => 'integer', 'value' => 'integer'),
+            array('text' => 'decimal', 'value' => 'decimal'),
+            array('text' => 'datetime', 'value' => 'datetime'),
+        ),
+        'value' => 'string',
     ),
     array(
         'name' => 'sortbyAlias',
@@ -67,7 +79,7 @@ $properties = array(
         'desc' => 'Order which to sort by. Defaults to DESC.',
         'type' => 'list',
         'options' => array(
-            array('text' => 'ASC','vaue' => 'ASC'),
+            array('text' => 'ASC','value' => 'ASC'),
             array('text' => 'DESC','value' => 'DESC'),
         ),
         'value' => 'DESC',
@@ -77,7 +89,7 @@ $properties = array(
         'desc' => 'Order which to sort a Template Variable by. Defaults to DESC.',
         'type' => 'list',
         'options' => array(
-            array('text' => 'ASC','vaue' => 'ASC'),
+            array('text' => 'ASC','value' => 'ASC'),
             array('text' => 'DESC','value' => 'DESC'),
         ),
         'value' => 'DESC',
@@ -98,7 +110,7 @@ $properties = array(
     ),
     array(
         'name' => 'tvFilters',
-        'desc' => 'Delimited-list of TemplateVar values to filter resources by. Supports two delimiters and two value search formats. THe first delimeter || represents a logical OR and the primary grouping mechanism.  Within each group you can provide a comma-delimited list of values. These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the value, indicating you are searching for the value in any TemplateVar tied to the Resource. An example would be &tvFilters=`filter2==one,filter1==bar%||filter1==foo`. <br />NOTE: filtering by values uses a LIKE query and % is considered a wildcard. <br />ANOTHER NOTE: This only looks at the raw value set for specific Resource, i. e. there must be a value specifically set for the Resource and it is not evaluated.',
+        'desc' => 'Delimited-list of TemplateVar values to filter resources by. Supports two delimiters and two value search formats. THe first delimiter || represents a logical OR and the primary grouping mechanism.  Within each group you can provide a comma-delimited list of values. These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the value, indicating you are searching for the value in any TemplateVar tied to the Resource. An example would be &tvFilters=`filter2==one,filter1==bar%||filter1==foo`. <br />NOTE: filtering by values uses a LIKE query and % is considered a wildcard. <br />ANOTHER NOTE: This only looks at the raw value set for specific Resource, i. e. there must be a value specifically set for the Resource and it is not evaluated.',
         'type' => 'textfield',
         'options' => '',
         'value' => '',
@@ -202,11 +214,25 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'toSeparatePlaceholders',
+        'desc' => 'If set, will assign EACH result to a separate placeholder named by this param suffixed with a sequential number (starting from 0).',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'debug',
         'desc' => 'If true, will send the SQL query to the MODx log. Defaults to false.',
         'type' => 'combo-boolean',
         'options' => '',
         'value' => false,
+    ),
+    array(
+        'name' => 'where',
+        'desc' => 'A JSON expression of criteria to build any additional where clauses from, e.g. &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
     ),
 );
 

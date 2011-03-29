@@ -2,11 +2,11 @@
 /**
  * getResources
  *
- * A general purpose Resource listing and summarization snippet for MODx 2.0.
+ * A general purpose Resource listing and summarization snippet for MODX 2.x.
  *
  * @author Jason Coward
- * @copyright Copyright 2010, Jason Coward
- * @version 1.2.2-pl - October 18, 2010
+ * @copyright Copyright 2010-2011, Jason Coward
+ * @version 1.3.0-pl - March 28, 2011
  *
  * TEMPLATES
  *
@@ -28,7 +28,7 @@
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
- * delimiters and two value search formats. THe first delimeter || represents a logical OR and the
+ * delimiters and two value search formats. THe first delimiter || represents a logical OR and the
  * primary grouping mechanism.  Within each group you can provide a comma-delimited list of values.
  * These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the
  * value, indicating you are searching for the value in any TemplateVar tied to the Resource. An
@@ -40,10 +40,11 @@
  * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
- * sortby - (Opt) Field to sort by [default=publishedon]
+ * sortby - (Opt) Field to sort by or a JSON array, e.g. {"publishedon":"ASC","createdon":"DESC"} [default=publishedon]
  * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
+ * sortbyTVType - (Opt) A data type to CAST a TV Value to in order to sort on it properly [default=string]
  * sortbyAlias - (Opt) Query alias for sortby field [default=]
- * sortbyEscaped - (Opt) Escapes the field name specified in sortby [default=0]
+ * sortbyEscaped - (Opt) Escapes the field name(s) specified in sortby [default=0]
  * sortdir - (Opt) Order which to sort by [default=DESC]
  * sortdirTV - (Opt) Order which to sort by a TV [default=DESC]
  * limit - (Opt) Limits the number of resources returned [default=5]
@@ -94,8 +95,6 @@ $sortby = isset($sortby) ? $sortby : 'publishedon';
 $sortbyTV = isset($sortbyTV) ? $sortbyTV : '';
 $sortbyAlias = isset($sortbyAlias) ? $sortbyAlias : 'modResource';
 $sortbyEscaped = !empty($sortbyEscaped) ? true : false;
-if ($sortbyEscaped) $sortby = "`{$sortby}`";
-if (!empty($sortbyAlias)) $sortby = "`{$sortbyAlias}`.{$sortby}";
 $sortdir = isset($sortdir) ? $sortdir : 'DESC';
 $sortdirTV = isset($sortdirTV) ? $sortdirTV : 'DESC';
 $limit = isset($limit) ? (integer) $limit : 5;
@@ -118,8 +117,8 @@ if (!empty($context)) {
     $context = $modx->quote($modx->context->get('key'));
 }
 $criteria = $modx->newQuery('modResource', array(
-    "`modResource`.`parent` IN (" . implode(',', $parents) . ")"
-    ,"(`modResource`.`context_key` IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} `ctx` WHERE `ctx`.`resource` = `modResource`.`id` AND `ctx`.`context_key` IN ({$context})))"
+    "modResource.parent IN (" . implode(',', $parents) . ")"
+    ,"(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))"
 ));
 if (empty($showDeleted)) {
     $criteria->andCondition(array('deleted' => '0'));
@@ -166,10 +165,10 @@ if (!empty($tvFilters)) {
             if (count($f) == 2) {
                 $tvName = $modx->quote($f[0]);
                 $tvValue = $modx->quote($f[1]);
-                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} `tvr` JOIN {$tmplVarTbl} `tv` ON `tvr`.`value` LIKE {$tvValue} AND `tv`.`name` = {$tvName} AND `tv`.`id` = `tvr`.`tmplvarid` WHERE `tvr`.`contentid` = `modResource`.`id`)";
+                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
             } elseif (count($f) == 1) {
                 $tvValue = $modx->quote($f[0]);
-                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} `tvr` JOIN {$tmplVarTbl} `tv` ON `tvr`.`value` LIKE {$tvValue} AND `tv`.`id` = `tvr`.`tmplvarid` WHERE `tvr`.`contentid` = `modResource`.`id`)";
+                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
             }
         }
     }
@@ -190,6 +189,10 @@ if (!empty($where)) {
 $total = $modx->getCount('modResource', $criteria);
 $modx->setPlaceholder($totalVar, $total);
 
+$fields = array_keys($modx->getFields('modResource'));
+if (empty($includeContent)) {
+    $fields = array_diff($fields, array('content'));
+}
 $columns = $includeContent ? $modx->getSelectColumns('modResource', 'modResource') : $modx->getSelectColumns('modResource', 'modResource', '', array('content'), true);
 $criteria->select($columns);
 if (!empty($sortbyTV)) {
@@ -197,13 +200,59 @@ if (!empty($sortbyTV)) {
         "tvDefault.name" => $sortbyTV
     ));
     $criteria->leftJoin('modTemplateVarResource', 'tvSort', array(
-        "`tvSort`.`contentid` = `modResource`.`id`",
-        "`tvSort`.`tmplvarid` = `tvDefault`.`id`"
+        "tvSort.contentid = modResource.id",
+        "tvSort.tmplvarid = tvDefault.id"
     ));
-    $criteria->select("IFNULL(`tvSort`.`value`, `tvDefault`.`default_text`) AS `sortTV`");
-    $criteria->sortby("`sortTV`", $sortdirTV);
+    if (empty($sortbyTVType)) $sortbyTVType = 'string';
+    if ($modx->getOption('dbtype') === 'mysql') {
+        switch ($sortbyTVType) {
+            case 'integer':
+                $criteria->select("CAST(IFNULL(tvSort.value, tvDefault.default_text) AS SIGNED INTEGER) AS sortTV");
+                break;
+            case 'decimal':
+                $criteria->select("CAST(IFNULL(tvSort.value, tvDefault.default_text) AS DECIMAL) AS sortTV");
+                break;
+            case 'datetime':
+                $criteria->select("CAST(IFNULL(tvSort.value, tvDefault.default_text) AS DATETIME) AS sortTV");
+                break;
+            case 'string':
+            default:
+                $criteria->select("IFNULL(tvSort.value, tvDefault.default_text) AS sortTV");
+                break;
+        }
+    } elseif ($modx->getOption('dbtype') === 'sqlsrv') {
+        switch ($sortbyTVType) {
+            case 'integer':
+                $criteria->select("CAST(ISNULL(tvSort.value, tvDefault.default_text) AS BIGINT) AS sortTV");
+                break;
+            case 'decimal':
+                $criteria->select("CAST(ISNULL(tvSort.value, tvDefault.default_text) AS DECIMAL) AS sortTV");
+                break;
+            case 'datetime':
+                $criteria->select("CAST(ISNULL(tvSort.value, tvDefault.default_text) AS DATETIME) AS sortTV");
+                break;
+            case 'string':
+            default:
+                $criteria->select("ISNULL(tvSort.value, tvDefault.default_text) AS sortTV");
+                break;
+        }
+    }
+    $criteria->sortby("sortTV", $sortdirTV);
 }
-if (!empty($sortby)) $criteria->sortby($sortby, $sortdir);
+if (!empty($sortby)) {
+    if (strpos($sortby, '{') === 0) {
+        $sorts = $modx->fromJSON($sortby);
+    } else {
+        $sorts = array($sortby => $sortdir);
+    }
+    if (is_array($sorts)) {
+        while (list($sort, $dir) = each($sorts)) {
+            if ($sortbyEscaped) $sort = $modx->escape($sort);
+            if (!empty($sortbyAlias)) $sort = $modx->escape($sortbyAlias) . ".{$sort}";
+            $criteria->sortby($sort, $dir);
+        }
+    }
+}
 if (!empty($limit)) $criteria->limit($limit, $offset);
 
 if (!empty($debug)) {
@@ -235,7 +284,7 @@ foreach ($collection as $resourceId => $resource) {
             ,'first' => $first
             ,'last' => $last
         )
-        ,$resource->toArray()
+        ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
     $resourceTpl = '';
@@ -262,6 +311,12 @@ foreach ($collection as $resourceId => $resource) {
 }
 
 /* output */
+$toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders',$scriptProperties,false);
+if (!empty($toSeparatePlaceholders)) {
+    $modx->setPlaceholders($output,$toSeparatePlaceholders);
+    return '';
+}
+
 $output = implode($outputSeparator, $output);
 $toPlaceholder = $modx->getOption('toPlaceholder',$scriptProperties,false);
 if (!empty($toPlaceholder)) {
