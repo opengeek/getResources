@@ -3,7 +3,7 @@
  * getResources
  *
  * @package getResources
- * @version 1.2.2
+ * @version 1.3.0
  * @release pl
  * @author Jason Coward <jason@modx.com>
  */
@@ -33,7 +33,7 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 /* set package info */
 define('PKG_NAME','getresources');
-define('PKG_VERSION','1.2.2');
+define('PKG_VERSION','1.3.0');
 define('PKG_RELEASE','pl');
 
 /* load builder */

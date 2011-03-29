@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+getResources 1.3.0-pl (March 28, 2011)
+====================================
 - [#33] sortbyTVType: Allow numeric and datetime TV sorting via SQL CAST()
 - [#24] Fix typos in list property options
 - [#4] Support multiple sortby fields via JSON object
