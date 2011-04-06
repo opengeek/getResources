@@ -162,7 +162,7 @@ if (!empty($tvFilters)) {
         $filters = explode(',', $tvFilter);
 		
 		// These are the operators we'll look at. Single characters must be done last, to avoid false positives.
-		$operators = array( '==', '!=', '<=', '>=', '<>', '>', '<' );
+		$operators = array( '==', '!=', '<=', '>=', '<>', '>', '<', '=' );
 		
         foreach ($filters as $filter) {
 			
@@ -175,10 +175,20 @@ if (!empty($tvFilters)) {
 				}
 			}
 			
+			// Split the operator from the values
             $f = explode($foundOperator, $filter);
 			
+			// In case the operator was also found in the value, put those bits back together again to reinstate the value
+			if (count($f) > 2) {
+				$tvName = array_shift($f);
+				$tvValue = implode($foundOperator, $f);
+			} else {
+				$tvName = $f[0];
+				$tvValue = $f[1];
+			}
+			
 			// If a TV name has ben specified, restrict the search to just that 
-			$tvName = $modx->quote($f[0]);
+			$tvName = $modx->quote($tvName);
 			if (count($f) == 2) {
 				$theTvSql = "AND tv.name = {$tvName}";
 			} elseif (count($f) == 1) {
@@ -190,26 +200,27 @@ if (!empty($tvFilters)) {
 				case '!=':
 				case '<>':	
 					$sqlOperator = 'NOT LIKE';
+					$quoteValue = true;
+					$exists = "NOT EXISTS";
 					break;
 				case '==':
 					$sqlOperator = 'LIKE';
-					break;
+					$quoteValue = true;
+					$exists = "EXISTS";
+					break;						
 				default:
 					$sqlOperator = $foundOperator;
+					$quoteValue = false; // Assume a numeric value if we're doing other comparisons
+					$exists = "EXISTS";
 					break;
-			}			
-			
-			
+			}						
 			
 			// Don't quote these values
-			if ( in_array( $f[1], array('NOW()') ) ) {
-				$tvValue = $f[1];
-			} else {
-				$tvValue = $modx->quote($f[1]);
-			}
-			print_r($f);
-			echo "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value {$sqlOperator} {$tvValue} {$theTvSql} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
-			$conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value {$sqlOperator} {$tvValue} {$theTvSql} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+			if ( $quoteValue ) {
+				$tvValue = $modx->quote($tvValue);				
+			} 
+			
+			$conditions[$filterGroup][] = "{$exists} (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value {$sqlOperator} {$tvValue} {$theTvSql} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
 			
         }
     }
