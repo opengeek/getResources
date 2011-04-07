@@ -293,10 +293,28 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
 		
 		// Get the TVs for this resource		
 		$templateVars =& $resource->getMany('TemplateVars');
+		
 		foreach ($templateVars as $tvId => $templateVar) {
+			
+			// Get TV info
 			$tvName = $templateVar->get('name');
-			$tv_cache[$resourceId][$tvName]['value'] = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
-			$tv_cache[$resourceId][$tvName]['type'] = $templateVar->get('type');
+			$tvType = $templateVar->get('type');
+			$tvValue = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
+			
+			// If a date, convert to PHP date format if possible
+			if ($tvType == 'date') {
+				$tvValueParsed = (strtotime($tvValue)) ? strtotime($tvValue) : $tvValue;	
+			} else {
+				$tvValueParsed = $tvValue;
+			}
+			
+			// Store these values in the cache
+			$tv_cache[$resourceId][$tvName] = array( 
+				'value'=> $tvValue,
+				'valueParsed'=> $tvValueParsed,
+				'type' => $tvType
+			);
+			
 		}	
 		
 		
@@ -323,123 +341,126 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
 						continue;	
 					}
 					
-					$tvValue = $tv_cache[$resourceId][$thisCriteria["tvName"]]['value'];
-					
-					// if it's a date, convert both to timestamps
-					if ($tv_cache[$resourceId][$thisCriteria["tvName"]]['type'] == 'date') {
-						$thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];
-						$tvValue = (strtotime($tvValue)) ? strtotime($tvValue) : $tvValue;
-					}
-					
+									
 					
 					//$modx->fire->log("-- Testing criteria are:");
 					//$modx->fire->log( $thisCriteria);
 					//$modx->fire->log("Processed TV value is $tvValue"); 
 					
+					// Define some functions to abstract the comparisons from PHP syntax for future flexibility
+					if (!function_exists('equals')) { function equals($a,$b) { return ($a == $b);	} }
+					if (!function_exists('notequals')) { function notequals($a,$b) { return ($a != $b);	} }
+					if (!function_exists('lteq')) { function lteq($a,$b) { return ($a <= $b);	} }
+					if (!function_exists('gteq')) { function gteq($a,$b) { return ($a >= $b);	} }
+					if (!function_exists('lt')) { function lt($a,$b) { return ($a < $b);	} }
+					if (!function_exists('gt')) { function gt($a,$b) { return ($a > $b);	} }
 					
-					switch ($thisCriteria['operator']) {
-						
+					// Which operator to use?
+					switch ($thisCriteria['operator']) {						
 						case '==':
 						case '=':
-							// If there is no specific TV name, search all TVs
-							if ($thisCriteria["tvName"] == '' && array_search($thisCriteria['tvValue'], $tv_cache[$resourceId]) ) {
-								$keep = true;
-							// If there is a specific TV name, check that one
-							} else if ($tvValue == $thisCriteria['tvValue']) {
-								$keep = true;
-							// Else remove this resource		
-							} else {
-								$keep = false;
-								break 2;
-							}
+							$comparison_function = 'equals';
 						break;
 						
 						case '!=':
 						case '<>':
-							// If there is no specific TV name, search all TVs
-							if ($thisCriteria["tvName"] == '' && !array_search($thisCriteria['tvValue'], $tv_cache[$resourceId]) ) {
-								$keep = true;
-							// If there is a specific TV name, check that one
-							} else if ($tvValue != $thisCriteria['tvValue']) {
-								$keep = true;
-							// Else remove this resource		
-							} else {
-								$keep = false;
-								break 2;
-							}
-						break;	
-						
+							$comparison_function = 'notequals';
+						break;							
 						
 						case '<=':							
-							// If there is a specific TV name, check that one
-							if ($tvValue <= $thisCriteria['tvValue']) {
-								$keep = true;
-							// Else remove this resource		
-							} else {
-								$keep = false;
-								break 2;
-							}
-						break;
-						
+							$comparison_function = 'lteq';
+						break;						
 						
 						case '>=':							
-							// If there is a specific TV name, check that one
-							if ($tvValue >= $thisCriteria['tvValue']) {
-								$keep = true;
-							// Else remove this resource		
-							} else {
-								$keep = false;
-								break 2;
-							}
-						break;
-						
+							$comparison_function = 'gteq';
+						break;						
 						
 						case '<':							
-							// If there is a specific TV name, check that one
-							if ($tvValue < $thisCriteria['tvValue']) {
-								$keep = true;
-							// Else remove this resource		
-							} else {
-								$keep = false;
-								break 2;
-							}
-						break;
-						
+							$comparison_function = 'lt';
+						break;						
 						
 						case '>':							
-							// If there is a specific TV name, check that one
-							if ($tvValue > $thisCriteria['tvValue']) {
-								$modx->fire->log("> match - keep is true");
-								$keep = true;
-							// Else remove this resource		
-							} else {
-								$modx->fire->log("NO > match - keep is false");
-								$keep = false;
-								break 2;
-							}
-						break;
-						
+							$comparison_function = 'gt';
+						break;						
 					}
+					
+					
+					// If there is no specific TV name, search all TVs
+					if ($thisCriteria["tvName"] == '') {
+						
+						//$modx->fire->log("Empty TV name");
+												
+						foreach($tv_cache[$resourceId] as $thisTvName => $thisTV) {
+							
+							// If the TV is a date, convert the criteria value to a PHP date
+							if ($thisTV['type'] == 'date') {
+								$thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];	
+							}
+							
+							// Check if the value matches
+							if ( call_user_func($comparison_function, $thisTV['valueParsed'], $thisCriteria['tvValue']) ) {
+								$keep = true;
+								break;
+							} else { 
+								$keep = false; $modx->fire->log("Result is DO NOT KEEP"); 
+								break; 
+							} 
+							
+						}
+						
+					// If there is a specific TV name, check that one	
+					} else if ($thisCriteria["tvName"] != '') {
+						
+						
+						//$modx->fire->log("-- Resource $resourceId , TV name is ". $thisCriteria["tvName"]);
+						
+						// The TV value
+						$tvValue = $tv_cache[$resourceId][$thisCriteria["tvName"]]['valueParsed'];
+						
+						// If the TV is a date, convert the criteria value to a PHP date		
+						if ($tv_cache[$resourceId][$thisCriteria["tvName"]]['type'] == 'date') {
+							$thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];	
+						}
+						
+						//$modx->fire->log("comparison_function is $comparison_function");
+						//$modx->fire->log("tvValue is $tvValue");
+						//$modx->fire->log("thisCriteria['tvValue'] is ".$thisCriteria['tvValue']);
+						
+						// Check if the value matches
+						if ( call_user_func($comparison_function, $tvValue, $thisCriteria['tvValue']) ) {
+							$keep = true;
+							//$modx->fire->log("Result is KEEP");						
+						} else { 
+							$keep = false;// $modx->fire->log("Result is DO NOT KEEP"); 
+							break; 
+						} 
+					// Else remove this resource		
+					} else {
+						$keep = false;
+						break;
+					}
+					
+						
 					
 				}
 				
 				// If this group has proven to be true, since groups are OR, we don't need to evaluate any further
 				if ($keep) {
-					$modx->fire->log("End of this group tests - keep is still true");
+					//$modx->fire->log("End of this group tests - keep is still true");
 					$keep_group = true;
 					break;	
 				} else {
-					$modx->fire->log("End of this group tests - keep is false");
+					//$modx->fire->log("End of this group tests - keep is false");
 				}
 				
 			}
 			
 			// If we're not keeping, remove from the collections array
 			if (!$keep_group) {
-				$modx->fire->log("End of this all tests - keep_group is NOT true, deleting this resource");
+				//$modx->fire->log("End of this all tests - keep_group is NOT true, deleting this resource");
 				unset($collection[$resourceId]);	
 			} else {
-				$modx->fire->log("End of this all tests - keep_group is true, keeping this resource");	
+				//$modx->fire->log("End of this all tests - keep_group is true, keeping this resource");	
 			}
 			
 		}
@@ -461,7 +482,7 @@ foreach ($collection as $resourceId => $resource) {
     if (!empty($includeTVs)) {
         $templateVars =& $resource->getMany('TemplateVars');
         foreach ($tv_cache[$resourceId] as $tvId => $templateVal) {
-            $tvs[$tvPrefix . $tvId] = $templateVal;
+            $tvs[$tvPrefix . $tvId] = $templateVal['value'];
         }
     }
     $odd = ($idx & 1);
