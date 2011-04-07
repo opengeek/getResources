@@ -1,4 +1,8 @@
 <?php
+
+$modx->getService('fire', 'modFire', $modx->getOption('core_path').'components/modfire/');
+
+
 /**
  * getResources
  *
@@ -6,7 +10,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010-2011, Jason Coward
- * @version 1.3.0-pl - March 28, 2011
+ * @version 1.3.1-beta - March 28, 2011
  *
  * TEMPLATES
  *
@@ -153,86 +157,49 @@ if (!empty($resources)) {
         $criteria->andCondition(array('modResource.id NOT IN ('.implode(',',$exclude).')'));
     }
 }
+
+// Parse TV filters
 if (!empty($tvFilters)) {
-    $tmplVarTbl = $modx->getTableName('modTemplateVar');
-    $tmplVarResourceTbl = $modx->getTableName('modTemplateVarResource');
     $conditions = array();
-    foreach ($tvFilters as $fGroup => $tvFilter) {
-        $filterGroup = count($tvFilters) > 1 ? $fGroup + 1 : 0;
-        $filters = explode(',', $tvFilter);
-		
-		// These are the operators we'll look at. Single characters must be done last, to avoid false positives.
-		$operators = array( '==', '!=', '<=', '>=', '<>', '>', '<', '=' );
-		
-        foreach ($filters as $filter) {
+		foreach ($tvFilters as $fGroup => $tvFilter) {
 			
-			// Find which operator we're working on
-			$foundOperator = '=='; // Default
-			foreach ($operators as $o) {
-				if ( strpos($filter, $o) !== false) {
-					$foundOperator = $o;
-					break;	
+			$filterGroup = count($tvFilters) > 1 ? $fGroup + 1 : 0;
+			$filters = explode(',', $tvFilter);
+			
+			// These are the operators we'll look at. Single characters must be done last, to avoid false positives.
+			$operators = array( '==', '!=', '<=', '>=', '<>', '>', '<', '=' );
+			
+			foreach ($filters as $filter) {
+				
+				// Find which operator we're working on
+				$foundOperator = '=='; // Default
+				foreach ($operators as $o) {
+					if ( strpos($filter, $o) !== false) {
+						$foundOperator = $o;
+						break;	
+					}
 				}
-			}
-			
-			// Split the operator from the values
-            $f = explode($foundOperator, $filter);
-			
-			// In case the operator was also found in the value, put those bits back together again to reinstate the value
-			if (count($f) > 2) {
-				$tvName = array_shift($f);
-				$tvValue = implode($foundOperator, $f);
-			} else {
-				$tvName = $f[0];
-				$tvValue = $f[1];
-			}
-			
-			// If a TV name has ben specified, restrict the search to just that 
-			$tvName = $modx->quote($tvName);
-			if (count($f) == 2) {
-				$theTvSql = "AND tv.name = {$tvName}";
-			} elseif (count($f) == 1) {
-				$theTvSql = "";
-			}
-			
-			// Build the conditions
-			switch ($foundOperator) {
-				case '!=':
-				case '<>':	
-					$sqlOperator = 'NOT LIKE';
-					$quoteValue = true;
-					$exists = "NOT EXISTS";
-					break;
-				case '==':
-					$sqlOperator = 'LIKE';
-					$quoteValue = true;
-					$exists = "EXISTS";
-					break;						
-				default:
-					$sqlOperator = $foundOperator;
-					$quoteValue = false; // Assume a numeric value if we're doing other comparisons
-					$exists = "EXISTS";
-					break;
-			}						
-			
-			// Don't quote these values
-			if ( $quoteValue ) {
-				$tvValue = $modx->quote($tvValue);				
-			} 
-			
-			$conditions[$filterGroup][] = "{$exists} (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value {$sqlOperator} {$tvValue} {$theTvSql} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
-			
-        }
-    }
-    if (!empty($conditions)) {
-        foreach ($conditions as $cGroup => $c) {
-            if ($cGroup > 0) {
-                $criteria->orCondition($c, null, $cGroup);
-            } else {
-                $criteria->andCondition($c);
-            }
-        }
-    }
+				
+				// Split the operator from the values
+				$f = explode($foundOperator, $filter);
+						
+				// And split into TV name and value
+				if (count($f) > 2) {// In case the operator was also found in the value, put those bits back together again to reinstate the value
+					$tvName = array_shift($f);
+					$tvValue = implode($foundOperator, $f);
+				} else if (count($f) == 2) { 
+					$tvName = $f[0];
+					$tvValue = $f[1];
+				} else {
+					$tvName = '';
+					$tvValue = $f[0];
+				}
+				
+				// Put these into an array
+				$conditions[$filterGroup][] = array( 'tvName' => $tvName, 'tvValue' => $tvValue, 'operator' => $foundOperator);
+    
+		}
+	}
 }
 if (!empty($where)) {
     $criteria->where($where);
@@ -313,6 +280,175 @@ if (!empty($debug)) {
 }
 $collection = $modx->getCollection('modResource', $criteria);
 
+
+
+// Now we have a basic set of results, are we retrieving or filtering on TVs?
+if (!empty($includeTVs) || !empty($tvFilters)) { 	
+
+	$tv_cache = array();
+
+	// Go through each resource which has been found, and populate it with TV values. Do this once.
+	foreach ($collection as $resourceId => $resource) {
+		
+		
+		// Get the TVs for this resource		
+		$templateVars =& $resource->getMany('TemplateVars');
+		foreach ($templateVars as $tvId => $templateVar) {
+			$tvName = $templateVar->get('name');
+			$tv_cache[$resourceId][$tvName]['value'] = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
+			$tv_cache[$resourceId][$tvName]['type'] = $templateVar->get('type');
+		}	
+		
+		
+		
+		//$modx->fire->log("--------- Testing Resource $resourceId " . $resource->get('pagetitle'));
+		
+		// Are we including this resource?
+		 if (!empty($conditions)) {
+			 
+			$keep_group = false; 
+			 
+			foreach ($conditions as $cGroup => $c) {
+				
+				$keep = false;
+				//$modx->fire->log("--------- Testing Condition group $cGroup");
+				
+				foreach ($c as $thisCriteria) {	
+								
+					
+					// If it's a wildcard, keep and check the next criteria
+					if ($thisCriteria['tvValue'] == '%') {
+						$keep = true;
+						//$modx->fire->log("Its a wildcard - keep is true, skipping to next criteria");
+						continue;	
+					}
+					
+					$tvValue = $tv_cache[$resourceId][$thisCriteria["tvName"]]['value'];
+					
+					// if it's a date, convert both to timestamps
+					if ($tv_cache[$resourceId][$thisCriteria["tvName"]]['type'] == 'date') {
+						$thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];
+						$tvValue = (strtotime($tvValue)) ? strtotime($tvValue) : $tvValue;
+					}
+					
+					
+					//$modx->fire->log("-- Testing criteria are:");
+					//$modx->fire->log( $thisCriteria);
+					//$modx->fire->log("Processed TV value is $tvValue"); 
+					
+					
+					switch ($thisCriteria['operator']) {
+						
+						case '==':
+						case '=':
+							// If there is no specific TV name, search all TVs
+							if ($thisCriteria["tvName"] == '' && array_search($thisCriteria['tvValue'], $tv_cache[$resourceId]) ) {
+								$keep = true;
+							// If there is a specific TV name, check that one
+							} else if ($tvValue == $thisCriteria['tvValue']) {
+								$keep = true;
+							// Else remove this resource		
+							} else {
+								$keep = false;
+								break 2;
+							}
+						break;
+						
+						case '!=':
+						case '<>':
+							// If there is no specific TV name, search all TVs
+							if ($thisCriteria["tvName"] == '' && !array_search($thisCriteria['tvValue'], $tv_cache[$resourceId]) ) {
+								$keep = true;
+							// If there is a specific TV name, check that one
+							} else if ($tvValue != $thisCriteria['tvValue']) {
+								$keep = true;
+							// Else remove this resource		
+							} else {
+								$keep = false;
+								break 2;
+							}
+						break;	
+						
+						
+						case '<=':							
+							// If there is a specific TV name, check that one
+							if ($tvValue <= $thisCriteria['tvValue']) {
+								$keep = true;
+							// Else remove this resource		
+							} else {
+								$keep = false;
+								break 2;
+							}
+						break;
+						
+						
+						case '>=':							
+							// If there is a specific TV name, check that one
+							if ($tvValue >= $thisCriteria['tvValue']) {
+								$keep = true;
+							// Else remove this resource		
+							} else {
+								$keep = false;
+								break 2;
+							}
+						break;
+						
+						
+						case '<':							
+							// If there is a specific TV name, check that one
+							if ($tvValue < $thisCriteria['tvValue']) {
+								$keep = true;
+							// Else remove this resource		
+							} else {
+								$keep = false;
+								break 2;
+							}
+						break;
+						
+						
+						case '>':							
+							// If there is a specific TV name, check that one
+							if ($tvValue > $thisCriteria['tvValue']) {
+								$modx->fire->log("> match - keep is true");
+								$keep = true;
+							// Else remove this resource		
+							} else {
+								$modx->fire->log("NO > match - keep is false");
+								$keep = false;
+								break 2;
+							}
+						break;
+						
+					}
+					
+				}
+				
+				// If this group has proven to be true, since groups are OR, we don't need to evaluate any further
+				if ($keep) {
+					$modx->fire->log("End of this group tests - keep is still true");
+					$keep_group = true;
+					break;	
+				} else {
+					$modx->fire->log("End of this group tests - keep is false");
+				}
+				
+			}
+			
+			// If we're not keeping, remove from the collections array
+			if (!$keep_group) {
+				$modx->fire->log("End of this all tests - keep_group is NOT true, deleting this resource");
+				unset($collection[$resourceId]);	
+			} else {
+				$modx->fire->log("End of this all tests - keep_group is true, keeping this resource");	
+			}
+			
+		}
+		
+	}
+}
+
+
+
 $idx = !empty($idx) ? intval($idx) : 1;
 $first = empty($first) && $first !== '0' ? 1 : intval($first);
 $last = empty($last) ? (count($collection) + $idx - 1) : intval($last);
@@ -324,8 +460,8 @@ foreach ($collection as $resourceId => $resource) {
     $tvs = array();
     if (!empty($includeTVs)) {
         $templateVars =& $resource->getMany('TemplateVars');
-        foreach ($templateVars as $tvId => $templateVar) {
-            $tvs[$tvPrefix . $templateVar->get('name')] = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
+        foreach ($tv_cache[$resourceId] as $tvId => $templateVal) {
+            $tvs[$tvPrefix . $tvId] = $templateVal;
         }
     }
     $odd = ($idx & 1);
