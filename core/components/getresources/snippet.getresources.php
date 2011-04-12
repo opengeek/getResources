@@ -1,5 +1,6 @@
 <?php
 
+
 $modx->getService('fire', 'modFire', $modx->getOption('core_path').'components/modfire/');
 
 
@@ -161,52 +162,52 @@ if (!empty($resources)) {
 // Parse TV filters
 if (!empty($tvFilters)) {
     $conditions = array();
-		foreach ($tvFilters as $fGroup => $tvFilter) {
-			
-			$filterGroup = count($tvFilters) > 1 ? $fGroup + 1 : 0;
-			$filters = explode(',', $tvFilter);
-			
-			// These are the operators we'll look at. Single characters must be done last, to avoid false positives.
-			$operators = array( '==', '!=', '<=', '>=', '<>', '>', '<', '=' );
-			
-			foreach ($filters as $filter) {
-				
-				// Find which operator we're working on
-				$foundOperator = '=='; // Default
-				foreach ($operators as $o) {
-					if ( strpos($filter, $o) !== false) {
-						$foundOperator = $o;
-						break;	
-					}
-				}
-				
-				// Split the operator from the values
-				$f = explode($foundOperator, $filter);
-						
-				// And split into TV name and value
-				if (count($f) > 2) {// In case the operator was also found in the value, put those bits back together again to reinstate the value
-					$tvName = array_shift($f);
-					$tvValue = implode($foundOperator, $f);
-				} else if (count($f) == 2) { 
-					$tvName = $f[0];
-					$tvValue = $f[1];
-				} else {
-					$tvName = '';
-					$tvValue = $f[0];
-				}
-				
-				// Put these into an array
-				$conditions[$filterGroup][] = array( 'tvName' => $tvName, 'tvValue' => $tvValue, 'operator' => $foundOperator);
+    foreach ($tvFilters as $fGroup => $tvFilter) {
+      
+      $filterGroup = count($tvFilters) > 1 ? $fGroup + 1 : 0;
+      $filters = explode(',', $tvFilter);
+      
+      // These are the operators we'll look at. Single characters must be done last, to avoid false positives.
+      $operators = array( '==', '!=', '<=', '>=', '<>', '>', '<', '=' );
+      
+      foreach ($filters as $filter) {
+        
+        // Find which operator we're working on
+        $foundOperator = '=='; // Default
+        foreach ($operators as $o) {
+          if ( strpos($filter, $o) !== false) {
+            $foundOperator = $o;
+            break;  
+          }
+        }
+        
+        // Split the operator from the values
+        $f = explode($foundOperator, $filter);
+            
+        // And split into TV name and value
+        if (count($f) > 2) {// In case the operator was also found in the value, put those bits back together again to reinstate the value
+          $tvName = array_shift($f);
+          $tvValue = implode($foundOperator, $f);
+        } else if (count($f) == 2) { 
+          $tvName = $f[0];
+          $tvValue = $f[1];
+        } else {
+          $tvName = '';
+          $tvValue = $f[0];
+        }
+        
+        // Put these into an array
+        $conditions[$filterGroup][] = array( 'tvName' => $tvName, 'tvValue' => $tvValue, 'operator' => $foundOperator);
     
-		}
-	}
+    }
+  }
 }
 if (!empty($where)) {
     $criteria->where($where);
 }
 
 $total = $modx->getCount('modResource', $criteria);
-$modx->setPlaceholder($totalVar, $total);
+$modx->fire->log('Initial total is '. $total);
 
 $fields = array_keys($modx->getFields('modResource'));
 if (empty($includeContent)) {
@@ -283,189 +284,165 @@ $collection = $modx->getCollection('modResource', $criteria);
 
 
 // Now we have a basic set of results, are we retrieving or filtering on TVs?
-if (!empty($includeTVs) || !empty($tvFilters)) { 	
+if (!empty($includeTVs) || !empty($tvFilters)) {   
 
-	$tv_cache = array();
+  $tv_cache = array();
 
-	// Go through each resource which has been found, and populate it with TV values. Do this once.
-	foreach ($collection as $resourceId => $resource) {
-		
-		
-		// Get the TVs for this resource		
-		$templateVars =& $resource->getMany('TemplateVars');
-		
-		foreach ($templateVars as $tvId => $templateVar) {
-			
-			// Get TV info
-			$tvName = $templateVar->get('name');
-			$tvType = $templateVar->get('type');
-			$tvValue = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
-			
-			// If a date, convert to PHP date format if possible
-			if ($tvType == 'date') {
-				$tvValueParsed = (strtotime($tvValue)) ? strtotime($tvValue) : $tvValue;	
-			} else {
-				$tvValueParsed = $tvValue;
-			}
-			
-			// Store these values in the cache
-			$tv_cache[$resourceId][$tvName] = array( 
-				'value'=> $tvValue,
-				'valueParsed'=> $tvValueParsed,
-				'type' => $tvType
-			);
-			
-		}	
-		
-		
-		
-		//$modx->fire->log("--------- Testing Resource $resourceId " . $resource->get('pagetitle'));
-		
-		// Are we including this resource?
-		 if (!empty($conditions)) {
-			 
-			$keep_group = false; 
-			 
-			foreach ($conditions as $cGroup => $c) {
-				
-				$keep = false;
-				//$modx->fire->log("--------- Testing Condition group $cGroup");
-				
-				foreach ($c as $thisCriteria) {	
-								
-					
-					// If it's a wildcard, keep and check the next criteria
-					if ($thisCriteria['tvValue'] == '%') {
-						$keep = true;
-						//$modx->fire->log("Its a wildcard - keep is true, skipping to next criteria");
-						continue;	
-					}
-					
-									
-					
-					//$modx->fire->log("-- Testing criteria are:");
-					//$modx->fire->log( $thisCriteria);
-					//$modx->fire->log("Processed TV value is $tvValue"); 
-					
-					// Define some functions to abstract the comparisons from PHP syntax for future flexibility
-					if (!function_exists('equals')) { function equals($a,$b) { return ($a == $b);	} }
-					if (!function_exists('notequals')) { function notequals($a,$b) { return ($a != $b);	} }
-					if (!function_exists('lteq')) { function lteq($a,$b) { return ($a <= $b);	} }
-					if (!function_exists('gteq')) { function gteq($a,$b) { return ($a >= $b);	} }
-					if (!function_exists('lt')) { function lt($a,$b) { return ($a < $b);	} }
-					if (!function_exists('gt')) { function gt($a,$b) { return ($a > $b);	} }
-					
-					// Which operator to use?
-					switch ($thisCriteria['operator']) {						
-						case '==':
-						case '=':
-							$comparison_function = 'equals';
-						break;
-						
-						case '!=':
-						case '<>':
-							$comparison_function = 'notequals';
-						break;							
-						
-						case '<=':							
-							$comparison_function = 'lteq';
-						break;						
-						
-						case '>=':							
-							$comparison_function = 'gteq';
-						break;						
-						
-						case '<':							
-							$comparison_function = 'lt';
-						break;						
-						
-						case '>':							
-							$comparison_function = 'gt';
-						break;						
-					}
-					
-					
-					// If there is no specific TV name, search all TVs
-					if ($thisCriteria["tvName"] == '') {
-						
-						//$modx->fire->log("Empty TV name");
-												
-						foreach($tv_cache[$resourceId] as $thisTvName => $thisTV) {
-							
-							// If the TV is a date, convert the criteria value to a PHP date
-							if ($thisTV['type'] == 'date') {
-								$thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];	
-							}
-							
-							// Check if the value matches
-							if ( call_user_func($comparison_function, $thisTV['valueParsed'], $thisCriteria['tvValue']) ) {
-								$keep = true;
-								break;
-							} else { 
-								$keep = false; $modx->fire->log("Result is DO NOT KEEP"); 
-								break; 
-							} 
-							
-						}
-						
-					// If there is a specific TV name, check that one	
-					} else if ($thisCriteria["tvName"] != '') {
-						
-						
-						//$modx->fire->log("-- Resource $resourceId , TV name is ". $thisCriteria["tvName"]);
-						
-						// The TV value
-						$tvValue = $tv_cache[$resourceId][$thisCriteria["tvName"]]['valueParsed'];
-						
-						// If the TV is a date, convert the criteria value to a PHP date		
-						if ($tv_cache[$resourceId][$thisCriteria["tvName"]]['type'] == 'date') {
-							$thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];	
-						}
-						
-						//$modx->fire->log("comparison_function is $comparison_function");
-						//$modx->fire->log("tvValue is $tvValue");
-						//$modx->fire->log("thisCriteria['tvValue'] is ".$thisCriteria['tvValue']);
-						
-						// Check if the value matches
-						if ( call_user_func($comparison_function, $tvValue, $thisCriteria['tvValue']) ) {
-							$keep = true;
-							//$modx->fire->log("Result is KEEP");						
-						} else { 
-							$keep = false;// $modx->fire->log("Result is DO NOT KEEP"); 
-							break; 
-						} 
-					// Else remove this resource		
-					} else {
-						$keep = false;
-						break;
-					}
-					
-						
-					
-				}
-				
-				// If this group has proven to be true, since groups are OR, we don't need to evaluate any further
-				if ($keep) {
-					//$modx->fire->log("End of this group tests - keep is still true");
-					$keep_group = true;
-					break;	
-				} else {
-					//$modx->fire->log("End of this group tests - keep is false");
-				}
-				
-			}
-			
-			// If we're not keeping, remove from the collections array
-			if (!$keep_group) {
-				//$modx->fire->log("End of this all tests - keep_group is NOT true, deleting this resource");
-				unset($collection[$resourceId]);	
-			} else {
-				//$modx->fire->log("End of this all tests - keep_group is true, keeping this resource");	
-			}
-			
-		}
-		
-	}
+  // Go through each resource which has been found, and populate it with TV values. Do this once.
+  foreach ($collection as $resourceId => $resource) {
+    
+    
+    // Get the TVs for this resource    
+    $templateVars =& $resource->getMany('TemplateVars');
+    
+    foreach ($templateVars as $tvId => $templateVar) {
+      
+      // Get TV info
+      $tvName = $templateVar->get('name');
+      $tvType = $templateVar->get('type');
+      $tvValue = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
+      
+      // If a date, convert to PHP date format if possible
+      if ($tvType == 'date') {
+        $tvValueParsed = (strtotime($tvValue)) ? strtotime($tvValue) : $tvValue;  
+      } else {
+        $tvValueParsed = $tvValue;
+      }
+      
+      // Store these values in the cache
+      $tv_cache[$resourceId][$tvName] = array( 
+        'value'=> $tvValue,
+        'valueParsed'=> $tvValueParsed,
+        'type' => $tvType
+      );
+      
+    }  
+    
+    
+    // Are we including this resource?
+     if (!empty($conditions)) {
+       
+      $keep_group = false; 
+       
+      foreach ($conditions as $cGroup => $c) {
+        
+        $keep = false;
+        
+        foreach ($c as $thisCriteria) {  
+                
+          
+          // If it's a wildcard, keep and check the next criteria
+          if ($thisCriteria['tvValue'] == '%') {
+            $keep = true;
+            continue;  
+          }
+          
+          // Define some functions to abstract the comparisons from PHP syntax for future flexibility
+          if (!function_exists('equals')) { function equals($a,$b) { return ($a == $b);  } }
+          if (!function_exists('notequals')) { function notequals($a,$b) { return ($a != $b);  } }
+          if (!function_exists('lteq')) { function lteq($a,$b) { return ($a <= $b);  } }
+          if (!function_exists('gteq')) { function gteq($a,$b) { return ($a >= $b);  } }
+          if (!function_exists('lt')) { function lt($a,$b) { return ($a < $b);  } }
+          if (!function_exists('gt')) { function gt($a,$b) { return ($a > $b);  } }
+          
+          // Which operator to use?
+          switch ($thisCriteria['operator']) {            
+            case '==':
+            case '=':
+              $comparison_function = 'equals';
+            break;
+            
+            case '!=':
+            case '<>':
+              $comparison_function = 'notequals';
+            break;              
+            
+            case '<=':              
+              $comparison_function = 'lteq';
+            break;            
+            
+            case '>=':              
+              $comparison_function = 'gteq';
+            break;            
+            
+            case '<':              
+              $comparison_function = 'lt';
+            break;            
+            
+            case '>':              
+              $comparison_function = 'gt';
+            break;            
+          }
+          
+          
+          // If there is no specific TV name, search all TVs
+          if ($thisCriteria["tvName"] == '') {
+                        
+            foreach($tv_cache[$resourceId] as $thisTvName => $thisTV) {
+              
+              // If the TV is a date, convert the criteria value to a PHP date
+              if ($thisTV['type'] == 'date') {
+                $thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];  
+              }
+              
+              // Check if the value matches
+              if ( call_user_func($comparison_function, $thisTV['valueParsed'], $thisCriteria['tvValue']) ) {
+                $keep = true;
+                break;
+              } else { 
+                $keep = false;
+                break; 
+              } 
+              
+            }
+            
+          // If there is a specific TV name, check that one  
+          } else if ($thisCriteria["tvName"] != '') {
+                        
+            // The TV value
+            $tvValue = $tv_cache[$resourceId][$thisCriteria["tvName"]]['valueParsed'];
+            
+            // If the TV is a date, convert the criteria value to a PHP date    
+            if ($tv_cache[$resourceId][$thisCriteria["tvName"]]['type'] == 'date') {
+              $thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];  
+            }
+            
+            // Check if the value matches
+            if ( call_user_func($comparison_function, $tvValue, $thisCriteria['tvValue']) ) {
+              $keep = true;          
+            } else { 
+              $keep = false;
+              break; 
+            } 
+          // Else remove this resource    
+          } else {
+            $keep = false;
+            break;
+          }
+          
+            
+          
+        }
+        
+        // If this group has proven to be true, since groups are OR, we don't need to evaluate any further
+        if ($keep) {
+          $keep_group = true;
+          break;  
+        } else {
+        }
+        
+      }
+      
+      // If we're not keeping, remove from the collections array
+      if (!$keep_group) {
+        unset($collection[$resourceId]);		
+		$total--; 
+		$modx->fire->log('Removing a resource, so reducing total by 1 - it is now '. $total);
+      }
+      
+    }
+    
+  }
 }
 
 
@@ -473,6 +450,9 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
 $idx = !empty($idx) ? intval($idx) : 1;
 $first = empty($first) && $first !== '0' ? 1 : intval($first);
 $last = empty($last) ? (count($collection) + $idx - 1) : intval($last);
+
+
+$modx->setPlaceholder($totalVar, $total);
 
 /* include parseTpl */
 include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
