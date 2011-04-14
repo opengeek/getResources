@@ -1,7 +1,7 @@
 <?php
 
 
-$modx->getService('fire', 'modFire', $modx->getOption('core_path').'components/modfire/');
+//$modx->getService('fire', 'modFire', $modx->getOption('core_path').'components/modfire/');
 
 
 /**
@@ -11,7 +11,7 @@ $modx->getService('fire', 'modFire', $modx->getOption('core_path').'components/m
  *
  * @author Jason Coward
  * @copyright Copyright 2010-2011, Jason Coward
- * @version 1.3.1-beta - March 28, 2011
+ * @version 1.3.2-beta - April 12, 2011
  *
  * TEMPLATES
  *
@@ -201,13 +201,15 @@ if (!empty($tvFilters)) {
     
     }
   }
+} else {
+	$conditions = array();	
 }
+
+
 if (!empty($where)) {
     $criteria->where($where);
 }
 
-$total = $modx->getCount('modResource', $criteria);
-$modx->fire->log('Initial total is '. $total);
 
 $fields = array_keys($modx->getFields('modResource'));
 if (empty($includeContent)) {
@@ -273,7 +275,6 @@ if (!empty($sortby)) {
         }
     }
 }
-if (!empty($limit)) $criteria->limit($limit, $offset);
 
 if (!empty($debug)) {
     $criteria->prepare();
@@ -282,25 +283,24 @@ if (!empty($debug)) {
 $collection = $modx->getCollection('modResource', $criteria);
 
 
-
 // Now we have a basic set of results, are we retrieving or filtering on TVs?
-if (!empty($includeTVs) || !empty($tvFilters)) {   
+if (!empty($includeTVs) || !empty($conditions)) {   
 
   $tv_cache = array();
 
   // Go through each resource which has been found, and populate it with TV values. Do this once.
-  foreach ($collection as $resourceId => $resource) {
-    
+  foreach ($collection as $resourceId => $resource) {    
     
     // Get the TVs for this resource    
     $templateVars =& $resource->getMany('TemplateVars');
+	$id = $resource->get('id');
     
     foreach ($templateVars as $tvId => $templateVar) {
       
-      // Get TV info
+      // Get TV info	 
       $tvName = $templateVar->get('name');
       $tvType = $templateVar->get('type');
-      $tvValue = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
+      $tvValue = !empty($processTVs) ? $templateVar->renderOutput($id) : $templateVar->get('value');
       
       // If a date, convert to PHP date format if possible
       if ($tvType == 'date') {
@@ -310,7 +310,7 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
       }
       
       // Store these values in the cache
-      $tv_cache[$resourceId][$tvName] = array( 
+      $tv_cache['resource'.$id][$tvName] = array( 
         'value'=> $tvValue,
         'valueParsed'=> $tvValueParsed,
         'type' => $tvType
@@ -320,7 +320,7 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
     
     
     // Are we including this resource?
-     if (!empty($conditions)) {
+    if (!empty($conditions)) {
        
       $keep_group = false; 
        
@@ -338,8 +338,20 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
           }
           
           // Define some functions to abstract the comparisons from PHP syntax for future flexibility
-          if (!function_exists('equals')) { function equals($a,$b) { return ($a == $b);  } }
-          if (!function_exists('notequals')) { function notequals($a,$b) { return ($a != $b);  } }
+          if (!function_exists('equals')) { 
+			  function equals($a,$b) { 
+			  	// Is there a wildcard (not escaped)?
+				if (strpos($b, '%' !== false) && strpos($b, '\%' === false)) {
+					// Make the search term regexp friendly
+					$b_processed = str_replace('%', '.*', $b); // Wildcard
+					$b_processed = str_replace( array('[','\\', '^','$','.','|','*','+','(',')'), array('\[','\\\\', '\^','\$','\.','\|','\*','\+','\(','\)'), $b_processed); // Special regexp characters
+					return preg_match( $b_processed, $a);
+				} else {
+					return ($a == $b);  
+				}
+			  }
+		  }
+          if (!function_exists('notequals')) { function notequals($a,$b) { return !equals($a, $b);  } }
           if (!function_exists('lteq')) { function lteq($a,$b) { return ($a <= $b);  } }
           if (!function_exists('gteq')) { function gteq($a,$b) { return ($a >= $b);  } }
           if (!function_exists('lt')) { function lt($a,$b) { return ($a < $b);  } }
@@ -378,7 +390,7 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
           // If there is no specific TV name, search all TVs
           if ($thisCriteria["tvName"] == '') {
                         
-            foreach($tv_cache[$resourceId] as $thisTvName => $thisTV) {
+            foreach($tv_cache['resource'.$id] as $thisTvName => $thisTV) {
               
               // If the TV is a date, convert the criteria value to a PHP date
               if ($thisTV['type'] == 'date') {
@@ -400,10 +412,10 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
           } else if ($thisCriteria["tvName"] != '') {
                         
             // The TV value
-            $tvValue = $tv_cache[$resourceId][$thisCriteria["tvName"]]['valueParsed'];
+            $tvValue = $tv_cache['resource'.$id][$thisCriteria["tvName"]]['valueParsed'];
             
             // If the TV is a date, convert the criteria value to a PHP date    
-            if ($tv_cache[$resourceId][$thisCriteria["tvName"]]['type'] == 'date') {
+            if ($tv_cache['resource'.$id][$thisCriteria["tvName"]]['type'] == 'date') {
               $thisCriteria['tvValue'] = (strtotime($thisCriteria['tvValue'])) ? strtotime($thisCriteria['tvValue']) : $thisCriteria['tvValue'];  
             }
             
@@ -419,9 +431,6 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
             $keep = false;
             break;
           }
-          
-            
-          
         }
         
         // If this group has proven to be true, since groups are OR, we don't need to evaluate any further
@@ -436,8 +445,6 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
       // If we're not keeping, remove from the collections array
       if (!$keep_group) {
         unset($collection[$resourceId]);		
-		$total--; 
-		$modx->fire->log('Removing a resource, so reducing total by 1 - it is now '. $total);
       }
       
     }
@@ -447,21 +454,31 @@ if (!empty($includeTVs) || !empty($tvFilters)) {
 
 
 
+// Set a placeholder to record the total number of results found
+$total = count($collection);
+$modx->setPlaceholder($totalVar, $total);
+
+// If a limit has been set, slice the array
+if (!empty($limit)) {
+	$collection = array_slice($collection, $offset, $limit);
+}
+
+
 $idx = !empty($idx) ? intval($idx) : 1;
 $first = empty($first) && $first !== '0' ? 1 : intval($first);
 $last = empty($last) ? (count($collection) + $idx - 1) : intval($last);
 
 
-$modx->setPlaceholder($totalVar, $total);
+
 
 /* include parseTpl */
 include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
 
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
+	$id = $resource->get('id');
     if (!empty($includeTVs)) {
-        $templateVars =& $resource->getMany('TemplateVars');
-        foreach ($tv_cache[$resourceId] as $tvId => $templateVal) {
+        foreach ($tv_cache['resource'.$id] as $tvId => $templateVal) {
             $tvs[$tvPrefix . $tvId] = $templateVal['value'];
         }
     }
