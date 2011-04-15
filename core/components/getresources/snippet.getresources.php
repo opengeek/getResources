@@ -1,7 +1,7 @@
 <?php
 
 
-//$modx->getService('fire', 'modFire', $modx->getOption('core_path').'components/modfire/');
+$modx->getService('fire', 'modFire', $modx->getOption('core_path').'components/modfire/');
 
 
 /**
@@ -168,7 +168,7 @@ if (!empty($tvFilters)) {
       $filters = explode(',', $tvFilter);
       
       // These are the operators we'll look at. Single characters must be done last, to avoid false positives.
-      $operators = array( '==', '!=', '<=', '>=', '<>', '>', '<', '=' );
+      $operators = array( '==', '!=', '<=', '>=', '<>', '=in=', '>', '<', '=' );
       
       foreach ($filters as $filter) {
         
@@ -301,6 +301,9 @@ if (!empty($includeTVs) || !empty($conditions)) {
       $tvName = $templateVar->get('name');
       $tvType = $templateVar->get('type');
       $tvValue = !empty($processTVs) ? $templateVar->renderOutput($id) : $templateVar->get('value');
+	    
+	  $output_properties = $templateVar->get('output_properties'); // Get delimiter, if set
+	  $tvDelimiter = (isset($output_properties['delimiter'])) ? $output_properties['delimiter'] : '';	  
       
       // If a date, convert to PHP date format if possible
       if ($tvType == 'date') {
@@ -313,7 +316,8 @@ if (!empty($includeTVs) || !empty($conditions)) {
       $tv_cache['resource'.$id][$tvName] = array( 
         'value'=> $tvValue,
         'valueParsed'=> $tvValueParsed,
-        'type' => $tvType
+        'type' => $tvType,
+		'delimiter' => $tvDelimiter
       );
       
     }  
@@ -354,7 +358,12 @@ if (!empty($includeTVs) || !empty($conditions)) {
           if (!function_exists('notequals')) { function notequals($a,$b) { return !equals($a, $b);  } }
           if (!function_exists('lteq')) { function lteq($a,$b) { return ($a <= $b);  } }
           if (!function_exists('gteq')) { function gteq($a,$b) { return ($a >= $b);  } }
-          if (!function_exists('lt')) { function lt($a,$b) { return ($a < $b);  } }
+		  if (!function_exists('in')) { function in($a,$b,$delimiter) { 
+			$haystack = explode($delimiter, $a); 
+			return in_array($b, $haystack);  
+			} } 
+		  if (!function_exists('notin')) { function notin($a,$b,$delimiter) { return !in($a,$b,$delimiter);  } }
+		  if (!function_exists('lt')) { function lt($a,$b) { return ($a < $b);  } }
           if (!function_exists('gt')) { function gt($a,$b) { return ($a > $b);  } }
           
           // Which operator to use?
@@ -375,7 +384,15 @@ if (!empty($includeTVs) || !empty($conditions)) {
             
             case '>=':              
               $comparison_function = 'gteq';
-            break;            
+            break;
+			
+			case '=in=':              
+              $comparison_function = 'in';
+            break;
+			
+			case '=!in=':              
+              $comparison_function = 'notin';
+            break;               
             
             case '<':              
               $comparison_function = 'lt';
@@ -398,7 +415,7 @@ if (!empty($includeTVs) || !empty($conditions)) {
               }
               
               // Check if the value matches
-              if ( call_user_func($comparison_function, $thisTV['valueParsed'], $thisCriteria['tvValue']) ) {
+              if ( call_user_func($comparison_function, $thisTV['valueParsed'], $thisCriteria['tvValue'], $thisTV['delimiter']) ) {
                 $keep = true;
                 break;
               } else { 
@@ -420,7 +437,7 @@ if (!empty($includeTVs) || !empty($conditions)) {
             }
             
             // Check if the value matches
-            if ( call_user_func($comparison_function, $tvValue, $thisCriteria['tvValue']) ) {
+            if ( call_user_func($comparison_function, $tvValue, $thisCriteria['tvValue'], $tv_cache['resource'.$id][$thisCriteria["tvName"]]['delimiter']) ) {
               $keep = true;          
             } else { 
               $keep = false;
