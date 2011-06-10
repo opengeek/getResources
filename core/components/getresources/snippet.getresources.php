@@ -25,6 +25,8 @@
  *
  * parents - Comma-delimited list of ids serving as parents
  *
+ * resources - (Opt) Comma-delimited list of ids for resources, which will be included (positive integer) or excluded (negative integer) from the output collection.  Example: &resources=`1, 2, -3` will include resources of id 1 and 2 and exclude resource of id 3.
+ *
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
