@@ -40,7 +40,7 @@
  * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
- * sortby - (Opt) Field to sort by or a JSON array, e.g. {"publishedon":"ASC","createdon":"DESC"} [default=publishedon]
+ * sortby - (Opt) Field to sort by or a JSON array, e.g. {"publishedon":"ASC","createdon":"DESC"} [default=publishedon]. &sortby=`resources` limits to and orders collection by contents of the `resources` parameter.
  * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
  * sortbyTVType - (Opt) A data type to CAST a TV Value to in order to sort on it properly [default=string]
  * sortbyAlias - (Opt) Query alias for sortby field [default=]
@@ -239,7 +239,7 @@ if (!empty($sortbyTV)) {
     }
     $criteria->sortby("sortTV", $sortdirTV);
 }
-if (!empty($sortby)) {
+if (!empty($sortby) && $sortby !== 'resources') {
     if (strpos($sortby, '{') === 0) {
         $sorts = $modx->fromJSON($sortby);
     } else {
@@ -260,6 +260,32 @@ if (!empty($debug)) {
     $modx->log(modX::LOG_LEVEL_ERROR, $criteria->toSQL());
 }
 $collection = $modx->getCollection('modResource', $criteria);
+
+/* Sort and filter $collection by $resources */
+if (!function_exists('sortCollectionByResources')) {
+  function sortCollectionByResources (array $collection, array $resources) {
+    # Ensure $resources values are comparable with $collection keys
+    $resources = array_map('intval', $resources);
+    $collectionOrderedKeys = array_intersect_key(array_flip($resources), $collection);
+    $collectionFiltered = array_intersect_key($collection, $collectionOrderedKeys);
+    # Convert $collection keys to strings to prevent them from being renumbered on merge
+    $collectionOrderedKeysStr = array_flip(array_map('md5', array_flip($collectionOrderedKeys)));
+    $collectionFilteredKeysStr = array_map('md5', array_keys($collectionFiltered));
+    $collection = array_merge($collectionOrderedKeysStr, array_combine($collectionFilteredKeysStr, $collectionFiltered));
+    # Recover orginal keys and return
+    return array_combine(array_flip($collectionOrderedKeys), $collection);
+  }
+}
+
+/* Sort and order $collection by $resources only if $resources is not empty. 
+ * Otherwise return empty collection. */
+if ($sortby === 'resources') {
+  if (!empty($resources)) {
+    $collection = sortCollectionByResources($collection, $resources);
+  } else {
+    $collection = array();
+  }
+}
 
 $idx = !empty($idx) ? intval($idx) : 1;
 $first = empty($first) && $first !== '0' ? 1 : intval($first);
