@@ -283,9 +283,9 @@ if (!empty($debug)) {
 }
 $collection = $modx->getCollection('modResource', $criteria);
 
-$idx = !empty($idx) ? intval($idx) : 1;
-$first = empty($first) && $first !== '0' ? 1 : intval($first);
-$last = empty($last) ? (count($collection) + $idx - 1) : intval($last);
+$idx = !empty($idx) && $idx !== '0' ? (integer) $idx : 1;
+$first = empty($first) && $first !== '0' ? 1 : (integer) $first;
+$last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 
 /* include parseTpl */
 include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';

@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- [#43] Allow 0 as idx property
 - [#9] Fix tvFilters grouping
 - [#46] Fix criteria issue with &resources property
 
