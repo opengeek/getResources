@@ -204,7 +204,6 @@ if (!empty($resources)) {
         $criteria->where(array('modResource.id:NOT IN' => $exclude), xPDOQuery::SQL_AND, null, 1);
     }
 }
-if ($debug) $modx->log(modX::LOG_LEVEL_ERROR, print_r($criteria->query, true));
 if (!empty($where)) {
     $criteria->where($where);
 }
