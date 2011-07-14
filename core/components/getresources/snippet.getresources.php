@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010-2011, Jason Coward
- * @version 1.3.0-pl - March 28, 2011
+ * @version 1.3.1-pl - July 14, 2011
  *
  * TEMPLATES
  *
@@ -116,24 +116,75 @@ if (!empty($context)) {
 } else {
     $context = $modx->quote($modx->context->get('key'));
 }
-$criteria = $modx->newQuery('modResource', array(
+$criteria = array(
     "modResource.parent IN (" . implode(',', $parents) . ")"
     ,"(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))"
-));
+);
 if (empty($showDeleted)) {
-    $criteria->andCondition(array('deleted' => '0'));
+    $criteria['deleted'] = '0';
 }
 if (empty($showUnpublished)) {
-    $criteria->andCondition(array('published' => '1'));
+    $criteria['published'] = '1';
 }
 if (empty($showHidden)) {
-    $criteria->andCondition(array('hidemenu' => '0'));
+    $criteria['hidemenu'] = '0';
 }
 if (!empty($hideContainers)) {
-    $criteria->andCondition(array('isfolder' => '0'));
+    $criteria['isfolder'] = '0';
+}
+$criteria = $modx->newQuery('modResource', $criteria);
+if (!empty($tvFilters)) {
+    $tmplVarTbl = $modx->getTableName('modTemplateVar');
+    $tmplVarResourceTbl = $modx->getTableName('modTemplateVarResource');
+    $conditions = array();
+    foreach ($tvFilters as $fGroup => $tvFilter) {
+        $filterGroup = array();
+        $filters = explode(',', $tvFilter);
+        $multiple = count($filters) > 0;
+        foreach ($filters as $filter) {
+            $f = explode('==', $filter);
+            if (count($f) == 2) {
+                $tvName = $modx->quote($f[0]);
+                $tvValue = $modx->quote($f[1]);
+                if ($multiple) {
+                    $filterGroup[] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                } else {
+                    $filterGroup = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                }
+            } elseif (count($f) == 1) {
+                $tvValue = $modx->quote($f[0]);
+                if ($multiple) {
+                    $filterGroup[] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                } else {
+                    $filterGroup = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                }
+            }
+        }
+        $conditions[] = $filterGroup;
+    }
+    if (!empty($conditions)) {
+        $firstGroup = true;
+        foreach ($conditions as $cGroup => $c) {
+            if (is_array($c)) {
+                $first = true;
+                foreach ($c as $cond) {
+                    if ($first && !$firstGroup) {
+                        $criteria->condition($criteria->query['where'][0][1], $cond, xPDOQuery::SQL_OR, null, $cGroup);
+                    } else {
+                        $criteria->condition($criteria->query['where'][0][1], $cond, xPDOQuery::SQL_AND, null, $cGroup);
+                    }
+                    $first = false;
+                }
+            } else {
+                $criteria->condition($criteria->query['where'][0][1], $c, $firstGroup ? xPDOQuery::SQL_AND : xPDOQuery::SQL_OR, null, $cGroup);
+            }
+            $firstGroup = false;
+        }
+    }
 }
 /* include/exclude resources, via &resources=`123,-456` prop */
 if (!empty($resources)) {
+    $resourceConditions = array();
     $resources = explode(',',$resources);
     $include = array();
     $exclude = array();
@@ -147,39 +198,10 @@ if (!empty($resources)) {
         }
     }
     if (!empty($include)) {
-        $criteria->orCondition(array('modResource.id:IN' => $include),null,10);
+        $criteria->where(array('OR:modResource.id:IN' => $include), xPDOQuery::SQL_OR);
     }
     if (!empty($exclude)) {
-        $criteria->andCondition(array('modResource.id NOT IN ('.implode(',',$exclude).')'));
-    }
-}
-if (!empty($tvFilters)) {
-    $tmplVarTbl = $modx->getTableName('modTemplateVar');
-    $tmplVarResourceTbl = $modx->getTableName('modTemplateVarResource');
-    $conditions = array();
-    foreach ($tvFilters as $fGroup => $tvFilter) {
-        $filterGroup = count($tvFilters) > 1 ? $fGroup + 1 : 0;
-        $filters = explode(',', $tvFilter);
-        foreach ($filters as $filter) {
-            $f = explode('==', $filter);
-            if (count($f) == 2) {
-                $tvName = $modx->quote($f[0]);
-                $tvValue = $modx->quote($f[1]);
-                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
-            } elseif (count($f) == 1) {
-                $tvValue = $modx->quote($f[0]);
-                $conditions[$filterGroup][] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
-            }
-        }
-    }
-    if (!empty($conditions)) {
-        foreach ($conditions as $cGroup => $c) {
-            if ($cGroup > 0) {
-                $criteria->orCondition($c, null, $cGroup);
-            } else {
-                $criteria->andCondition($c);
-            }
-        }
+        $criteria->where(array('modResource.id:NOT IN' => $exclude), xPDOQuery::SQL_AND, null, 1);
     }
 }
 if (!empty($where)) {
@@ -261,9 +283,9 @@ if (!empty($debug)) {
 }
 $collection = $modx->getCollection('modResource', $criteria);
 
-$idx = !empty($idx) ? intval($idx) : 1;
-$first = empty($first) && $first !== '0' ? 1 : intval($first);
-$last = empty($last) ? (count($collection) + $idx - 1) : intval($last);
+$idx = !empty($idx) && $idx !== '0' ? (integer) $idx : 1;
+$first = empty($first) && $first !== '0' ? 1 : (integer) $first;
+$last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 
 /* include parseTpl */
 include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
