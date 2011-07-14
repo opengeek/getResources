@@ -1,5 +1,8 @@
 Changelog for getResources.
 
+- [#9] Fix tvFilters grouping
+- [#46] Fix criteria issue with &resources property
+
 getResources 1.3.0-pl (March 28, 2011)
 ====================================
 - [#33] sortbyTVType: Allow numeric and datetime TV sorting via SQL CAST()
