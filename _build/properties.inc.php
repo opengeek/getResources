@@ -144,6 +144,13 @@ $properties = array(
         'value' => false,
     ),
     array(
+        'name' => 'includeTVList',
+        'desc' => 'Limits included TVs to those specified as a comma-delimited list of TV names. Defaults to empty.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'showHidden',
         'desc' => 'Indicates if Resources that are hidden from menus should be shown. Defaults to false.',
         'type' => 'combo-boolean',
@@ -177,6 +184,13 @@ $properties = array(
         'type' => 'combo-boolean',
         'options' => '',
         'value' => false,
+    ),
+    array(
+        'name' => 'processTVList',
+        'desc' => 'Limits processed TVs to those specified as a comma-delimited list of TV names; note only includedTVs will be available for processing if specified. Defaults to empty.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
     ),
     array(
         'name' => 'tvPrefix',

@@ -1,6 +1,6 @@
 Changelog for getResources.
 
-- [#49] Allow comma-delimited list of TV names as includeTVs or processTVs value
+- [#49] Allow comma-delimited list of TV names as includeTVList or processTVList
 
 getResources 1.3.1-pl (July 14, 2011)
 ====================================

@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010-2011, Jason Coward
- * @version 1.3.1-pl - July 14, 2011
+ * @version 1.4.0-dev - Sept 20, 2011
  *
  * TEMPLATES
  *
@@ -56,8 +56,12 @@
  * results [default=0]
  * includeTVs - (Opt) Indicates if TemplateVar values should be included in the properties available
  * to each resource template [default=0]
+ * includeTVList - (Opt) Limits the TemplateVars that are included if includeTVs is true to those specified
+ * by name in a comma-delimited list [default=]
  * processTVs - (Opt) Indicates if TemplateVar values should be rendered as they would on the
  * resource being summarized [default=0]
+ * processTVList - (opt) Limits the TemplateVars that are processed if included to those specified
+ * by name in a comma-delimited list [default=]
  * tvPrefix - (Opt) The prefix for TemplateVar properties [default=tv.]
  * idx - (Opt) You can define the starting idx of the resources, which is an property that is
  * incremented as each resource is rendered [default=1]
@@ -73,8 +77,10 @@ $outputSeparator = isset($outputSeparator) ? $outputSeparator : "\n";
 /* set default properties */
 $tpl = !empty($tpl) ? $tpl : '';
 $includeContent = !empty($includeContent) ? true : false;
-$includeTVs = !empty($includeTVs) ? (is_numeric($includeTVs) || !is_string($includeTVs) ? true : explode(',', $includeTVs)) : false;
-$processTVs = !empty($processTVs) ? (is_numeric($processTVs) || !is_string($processTVs) ? true : explode(',', $processTVs)) : false;
+$includeTVs = !empty($includeTVs) ? true : false;
+$includeTVList = !empty($includeTVList) ? explode(',', $includeTVList) : array();
+$processTVs = !empty($processTVs) ? true : false;
+$processTVList = !empty($processTVList) ? explode(',', $processTVList) : array();
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
 $parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
 $depth = isset($depth) ? (integer) $depth : 10;
@@ -291,18 +297,18 @@ $last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
 
 $templateVars = array();
-if (!empty($includeTVs) && is_array($includeTVs)) {
-    $templateVars = $modx->getCollection('modTemplateVar', array('name:IN' => $includeTVs));
+if (!empty($includeTVs) && !empty($includeTVList)) {
+    $templateVars = $modx->getCollection('modTemplateVar', array('name:IN' => $includeTVList));
 }
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
     if (!empty($includeTVs)) {
-        if ($includeTVs === true) {
+        if (empty($includeTVList)) {
             $templateVars = $resource->getMany('TemplateVars');
         }
         foreach ($templateVars as $tvId => $templateVar) {
-            if (is_array($includeTVs) && !in_array($templateVar->get('name'), $includeTVs)) continue;
-            if ($processTVs === true || (is_array($processTVs) && in_array($templateVar->get('name'), $processTVs))) {
+            if (!empty($includeTVList) && !in_array($templateVar->get('name'), $includeTVList)) continue;
+            if ($processTVs && (empty($processTVList) || in_array($templateVar->get('name'), $processTVs))) {
                 $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->renderOutput($resource->get('id'));
             } else {
                 $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->getValue($resource->get('id'));
