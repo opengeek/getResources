@@ -73,8 +73,8 @@ $outputSeparator = isset($outputSeparator) ? $outputSeparator : "\n";
 /* set default properties */
 $tpl = !empty($tpl) ? $tpl : '';
 $includeContent = !empty($includeContent) ? true : false;
-$includeTVs = !empty($includeTVs) ? true : false;
-$processTVs = !empty($processTVs) ? true : false;
+$includeTVs = !empty($includeTVs) ? (is_numeric($includeTVs) || !is_string($includeTVs) ? true : explode(',', $includeTVs)) : false;
+$processTVs = !empty($processTVs) ? (is_numeric($processTVs) || !is_string($processTVs) ? true : explode(',', $processTVs)) : false;
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
 $parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
 $depth = isset($depth) ? (integer) $depth : 10;
@@ -290,12 +290,23 @@ $last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 /* include parseTpl */
 include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
 
+$templateVars = array();
+if (!empty($includeTVs) && is_array($includeTVs)) {
+    $templateVars = $modx->getCollection('modTemplateVar', array('name:IN' => $includeTVs));
+}
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
     if (!empty($includeTVs)) {
-        $templateVars =& $resource->getMany('TemplateVars');
+        if ($includeTVs === true) {
+            $templateVars = $resource->getMany('TemplateVars');
+        }
         foreach ($templateVars as $tvId => $templateVar) {
-            $tvs[$tvPrefix . $templateVar->get('name')] = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
+            if (is_array($includeTVs) && !in_array($templateVar->get('name'), $includeTVs)) continue;
+            if ($processTVs === true || (is_array($processTVs) && in_array($templateVar->get('name'), $processTVs))) {
+                $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->renderOutput($resource->get('id'));
+            } else {
+                $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->getValue($resource->get('id'));
+            }
         }
     }
     $odd = ($idx & 1);
