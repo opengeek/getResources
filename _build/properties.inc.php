@@ -255,6 +255,13 @@ $properties = array(
         'options' => '',
         'value' => '0',
     ),
+    array(
+        'name' => 'context',
+        'desc' => 'A comma-delimited list of context keys for limiting results. Default is empty, i.e. do not limit results by context.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
 );
 
 return $properties;

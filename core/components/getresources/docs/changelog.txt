@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- [#50] Use children of parents from other contexts
 - [#45] Add dbCacheFlag to control db caching of getCollection, default to false
 - [#49] Allow comma-delimited list of TV names as includeTVList or processTVList
 

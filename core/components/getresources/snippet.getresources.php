@@ -25,6 +25,9 @@
  *
  * parents - Comma-delimited list of ids serving as parents
  *
+ * contexts - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
+ * parents will be used (all contexts if 0 is specified) [default=]
+ * 
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
@@ -85,13 +88,9 @@ $processTVs = !empty($processTVs) ? true : false;
 $processTVList = !empty($processTVList) ? explode(',', $processTVList) : array();
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
 $parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
+array_walk($parents, 'trim');
+$parents = array_unique($parents);
 $depth = isset($depth) ? (integer) $depth : 10;
-$children = array();
-foreach ($parents as $parent) {
-    $pchildren = $modx->getChildIds($parent, $depth);
-    if (!empty($pchildren)) $children = array_merge($children, $pchildren);
-}
-if (!empty($children)) $parents = array_merge($parents, $children);
 
 $tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
 
@@ -120,25 +119,81 @@ if (is_string($dbCacheFlag) || is_numeric($dbCacheFlag)) {
     }
 }
 
-/* build query */
-$contextResourceTbl = $modx->getTableName('modContextResource');
-
 /* multiple context support */
+$contextArray = array();
+$contextSpecified = false;
 if (!empty($context)) {
-    $context = explode(',',$context);
+    $contextArray = explode(',',$context);
+    array_walk($contextArray, 'trim');
     $contexts = array();
-    foreach ($context as $ctx) {
+    foreach ($contextArray as $ctx) {
         $contexts[] = $modx->quote($ctx);
     }
     $context = implode(',',$contexts);
+    $contextSpecified = true;
     unset($contexts,$ctx);
 } else {
     $context = $modx->quote($modx->context->get('key'));
 }
-$criteria = array(
-    "modResource.parent IN (" . implode(',', $parents) . ")"
-    ,"(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))"
-);
+
+$pcMap = array();
+$pcQuery = $modx->newQuery('modResource', array('id:IN' => $parents), $dbCacheFlag);
+$pcQuery->select(array('id', 'context_key'));
+if ($pcQuery->prepare() && $pcQuery->stmt->execute()) {
+    foreach ($pcQuery->stmt->fetchAll(PDO::FETCH_ASSOC) as $pcRow) {
+        $pcMap[(integer) $pcRow['id']] = $pcRow['context_key'];
+    }
+}
+
+$children = array();
+$parentArray = array();
+foreach ($parents as $parent) {
+    $parent = (integer) $parent;
+    if ($parent === 0) {
+        $pchildren = array();
+        if ($contextSpecified) {
+            foreach ($contextArray as $pCtx) {
+                if (!in_array($pCtx, $contextArray)) {
+                    continue;
+                }
+                $options = $pCtx !== $modx->context->get('key') ? array('context' => $pCtx) : array();
+                $pcchildren = $modx->getChildIds($parent, $depth, $options);
+                if (!empty($pcchildren)) $pchildren = array_merge($pchildren, $pcchildren);
+            }
+        } else {
+            $cQuery = $modx->newQuery('modContext', array('key:!=' => 'mgr'));
+            $cQuery->select(array('key'));
+            if ($cQuery->prepare() && $cQuery->stmt->execute()) {
+                foreach ($cQuery->stmt->fetchAll(PDO::FETCH_COLUMN) as $pCtx) {
+                    $options = $pCtx !== $modx->context->get('key') ? array('context' => $pCtx) : array();
+                    $pcchildren = $modx->getChildIds($parent, $depth, $options);
+                    if (!empty($pcchildren)) $pchildren = array_merge($pchildren, $pcchildren);
+                }
+            }
+        }
+        $parentArray[] = $parent;
+    } else {
+        $pContext = array_key_exists($parent, $pcMap) ? $pcMap[$parent] : false;
+        if ($debug) $modx->log(modX::LOG_LEVEL_ERROR, "context for {$parent} is {$pContext}");
+        if ($pContext && $contextSpecified && !in_array($pContext, $contextArray, true)) {
+            $parent = next($parents);
+            continue;
+        }
+        $parentArray[] = $parent;
+        $options = !empty($pContext) && $pContext !== $modx->context->get('key') ? array('context' => $pContext) : array();
+        $pchildren = $modx->getChildIds($parent, $depth, $options);
+    }
+    if (!empty($pchildren)) $children = array_merge($children, $pchildren);
+    $parent = next($parents);
+}
+$parents = array_merge($parentArray, $children);
+
+/* build query */
+$criteria = array("modResource.parent IN (" . implode(',', $parents) . ")");
+if ($contextSpecified) {
+    $contextResourceTbl = $modx->getTableName('modContextResource');
+    $criteria[] = "(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))";
+}
 if (empty($showDeleted)) {
     $criteria['deleted'] = '0';
 }
