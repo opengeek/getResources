@@ -6,7 +6,7 @@
  *
  * @author Jason Coward
  * @copyright Copyright 2010-2011, Jason Coward
- * @version 1.3.1-pl - July 14, 2011
+ * @version 1.4.0-pl - Sept 21, 2011
  *
  * TEMPLATES
  *
@@ -25,6 +25,9 @@
  *
  * parents - Comma-delimited list of ids serving as parents
  *
+ * contexts - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
+ * parents will be used (all contexts if 0 is specified) [default=]
+ * 
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
@@ -49,6 +52,8 @@
  * sortdirTV - (Opt) Order which to sort by a TV [default=DESC]
  * limit - (Opt) Limits the number of resources returned [default=5]
  * offset - (Opt) An offset of resources returned by the criteria to skip [default=0]
+ * dbCacheFlag - (Opt) Controls caching of db queries; 0|false = do not cache result set; 1 = cache result set
+ * according to cache settings, any other integer value = number of seconds to cache result set [default=0]
  *
  * OPTIONS
  *
@@ -56,8 +61,12 @@
  * results [default=0]
  * includeTVs - (Opt) Indicates if TemplateVar values should be included in the properties available
  * to each resource template [default=0]
+ * includeTVList - (Opt) Limits the TemplateVars that are included if includeTVs is true to those specified
+ * by name in a comma-delimited list [default=]
  * processTVs - (Opt) Indicates if TemplateVar values should be rendered as they would on the
  * resource being summarized [default=0]
+ * processTVList - (opt) Limits the TemplateVars that are processed if included to those specified
+ * by name in a comma-delimited list [default=]
  * tvPrefix - (Opt) The prefix for TemplateVar properties [default=tv.]
  * idx - (Opt) You can define the starting idx of the resources, which is an property that is
  * incremented as each resource is rendered [default=1]
@@ -74,16 +83,14 @@ $outputSeparator = isset($outputSeparator) ? $outputSeparator : "\n";
 $tpl = !empty($tpl) ? $tpl : '';
 $includeContent = !empty($includeContent) ? true : false;
 $includeTVs = !empty($includeTVs) ? true : false;
+$includeTVList = !empty($includeTVList) ? explode(',', $includeTVList) : array();
 $processTVs = !empty($processTVs) ? true : false;
+$processTVList = !empty($processTVList) ? explode(',', $processTVList) : array();
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
 $parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
+array_walk($parents, 'trim');
+$parents = array_unique($parents);
 $depth = isset($depth) ? (integer) $depth : 10;
-$children = array();
-foreach ($parents as $parent) {
-    $pchildren = $modx->getChildIds($parent, $depth);
-    if (!empty($pchildren)) $children = array_merge($children, $pchildren);
-}
-if (!empty($children)) $parents = array_merge($parents, $children);
 
 $tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
 
@@ -101,25 +108,92 @@ $limit = isset($limit) ? (integer) $limit : 5;
 $offset = isset($offset) ? (integer) $offset : 0;
 $totalVar = !empty($totalVar) ? $totalVar : 'total';
 
-/* build query */
-$contextResourceTbl = $modx->getTableName('modContextResource');
+$dbCacheFlag = !isset($dbCacheFlag) ? false : $dbCacheFlag;
+if (is_string($dbCacheFlag) || is_numeric($dbCacheFlag)) {
+    if ($dbCacheFlag == '0') {
+        $dbCacheFlag = false;
+    } elseif ($dbCacheFlag == '1') {
+        $dbCacheFlag = true;
+    } else {
+        $dbCacheFlag = (integer) $dbCacheFlag;
+    }
+}
 
 /* multiple context support */
+$contextArray = array();
+$contextSpecified = false;
 if (!empty($context)) {
-    $context = explode(',',$context);
+    $contextArray = explode(',',$context);
+    array_walk($contextArray, 'trim');
     $contexts = array();
-    foreach ($context as $ctx) {
+    foreach ($contextArray as $ctx) {
         $contexts[] = $modx->quote($ctx);
     }
     $context = implode(',',$contexts);
+    $contextSpecified = true;
     unset($contexts,$ctx);
 } else {
     $context = $modx->quote($modx->context->get('key'));
 }
-$criteria = array(
-    "modResource.parent IN (" . implode(',', $parents) . ")"
-    ,"(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))"
-);
+
+$pcMap = array();
+$pcQuery = $modx->newQuery('modResource', array('id:IN' => $parents), $dbCacheFlag);
+$pcQuery->select(array('id', 'context_key'));
+if ($pcQuery->prepare() && $pcQuery->stmt->execute()) {
+    foreach ($pcQuery->stmt->fetchAll(PDO::FETCH_ASSOC) as $pcRow) {
+        $pcMap[(integer) $pcRow['id']] = $pcRow['context_key'];
+    }
+}
+
+$children = array();
+$parentArray = array();
+foreach ($parents as $parent) {
+    $parent = (integer) $parent;
+    if ($parent === 0) {
+        $pchildren = array();
+        if ($contextSpecified) {
+            foreach ($contextArray as $pCtx) {
+                if (!in_array($pCtx, $contextArray)) {
+                    continue;
+                }
+                $options = $pCtx !== $modx->context->get('key') ? array('context' => $pCtx) : array();
+                $pcchildren = $modx->getChildIds($parent, $depth, $options);
+                if (!empty($pcchildren)) $pchildren = array_merge($pchildren, $pcchildren);
+            }
+        } else {
+            $cQuery = $modx->newQuery('modContext', array('key:!=' => 'mgr'));
+            $cQuery->select(array('key'));
+            if ($cQuery->prepare() && $cQuery->stmt->execute()) {
+                foreach ($cQuery->stmt->fetchAll(PDO::FETCH_COLUMN) as $pCtx) {
+                    $options = $pCtx !== $modx->context->get('key') ? array('context' => $pCtx) : array();
+                    $pcchildren = $modx->getChildIds($parent, $depth, $options);
+                    if (!empty($pcchildren)) $pchildren = array_merge($pchildren, $pcchildren);
+                }
+            }
+        }
+        $parentArray[] = $parent;
+    } else {
+        $pContext = array_key_exists($parent, $pcMap) ? $pcMap[$parent] : false;
+        if ($debug) $modx->log(modX::LOG_LEVEL_ERROR, "context for {$parent} is {$pContext}");
+        if ($pContext && $contextSpecified && !in_array($pContext, $contextArray, true)) {
+            $parent = next($parents);
+            continue;
+        }
+        $parentArray[] = $parent;
+        $options = !empty($pContext) && $pContext !== $modx->context->get('key') ? array('context' => $pContext) : array();
+        $pchildren = $modx->getChildIds($parent, $depth, $options);
+    }
+    if (!empty($pchildren)) $children = array_merge($children, $pchildren);
+    $parent = next($parents);
+}
+$parents = array_merge($parentArray, $children);
+
+/* build query */
+$criteria = array("modResource.parent IN (" . implode(',', $parents) . ")");
+if ($contextSpecified) {
+    $contextResourceTbl = $modx->getTableName('modContextResource');
+    $criteria[] = "(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))";
+}
 if (empty($showDeleted)) {
     $criteria['deleted'] = '0';
 }
@@ -281,7 +355,7 @@ if (!empty($debug)) {
     $criteria->prepare();
     $modx->log(modX::LOG_LEVEL_ERROR, $criteria->toSQL());
 }
-$collection = $modx->getCollection('modResource', $criteria);
+$collection = $modx->getCollection('modResource', $criteria, $dbCacheFlag);
 
 $idx = !empty($idx) && $idx !== '0' ? (integer) $idx : 1;
 $first = empty($first) && $first !== '0' ? 1 : (integer) $first;
@@ -290,12 +364,23 @@ $last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 /* include parseTpl */
 include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
 
+$templateVars = array();
+if (!empty($includeTVs) && !empty($includeTVList)) {
+    $templateVars = $modx->getCollection('modTemplateVar', array('name:IN' => $includeTVList));
+}
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
     if (!empty($includeTVs)) {
-        $templateVars =& $resource->getMany('TemplateVars');
+        if (empty($includeTVList)) {
+            $templateVars = $resource->getMany('TemplateVars');
+        }
         foreach ($templateVars as $tvId => $templateVar) {
-            $tvs[$tvPrefix . $templateVar->get('name')] = !empty($processTVs) ? $templateVar->renderOutput($resource->get('id')) : $templateVar->get('value');
+            if (!empty($includeTVList) && !in_array($templateVar->get('name'), $includeTVList)) continue;
+            if ($processTVs && (empty($processTVList) || in_array($templateVar->get('name'), $processTVs))) {
+                $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->renderOutput($resource->get('id'));
+            } else {
+                $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->getValue($resource->get('id'));
+            }
         }
     }
     $odd = ($idx & 1);

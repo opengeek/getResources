@@ -144,6 +144,13 @@ $properties = array(
         'value' => false,
     ),
     array(
+        'name' => 'includeTVList',
+        'desc' => 'Limits included TVs to those specified as a comma-delimited list of TV names. Defaults to empty.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'showHidden',
         'desc' => 'Indicates if Resources that are hidden from menus should be shown. Defaults to false.',
         'type' => 'combo-boolean',
@@ -177,6 +184,13 @@ $properties = array(
         'type' => 'combo-boolean',
         'options' => '',
         'value' => false,
+    ),
+    array(
+        'name' => 'processTVList',
+        'desc' => 'Limits processed TVs to those specified as a comma-delimited list of TV names; note only includedTVs will be available for processing if specified. Defaults to empty.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
     ),
     array(
         'name' => 'tvPrefix',
@@ -222,7 +236,7 @@ $properties = array(
     ),
     array(
         'name' => 'debug',
-        'desc' => 'If true, will send the SQL query to the MODx log. Defaults to false.',
+        'desc' => 'If true, will send the SQL query to the MODX log. Defaults to false.',
         'type' => 'combo-boolean',
         'options' => '',
         'value' => false,
@@ -230,6 +244,20 @@ $properties = array(
     array(
         'name' => 'where',
         'desc' => 'A JSON expression of criteria to build any additional where clauses from, e.g. &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
+        'name' => 'dbCacheFlag',
+        'desc' => 'Determines how result sets are cached if cache_db is enabled in MODX. 0|false = do not cache result set; 1 = cache result set according to cache settings, any other integer value = number of seconds to cache result set',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '0',
+    ),
+    array(
+        'name' => 'context',
+        'desc' => 'A comma-delimited list of context keys for limiting results. Default is empty, i.e. do not limit results by context.',
         'type' => 'textfield',
         'options' => '',
         'value' => '',

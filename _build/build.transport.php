@@ -3,8 +3,6 @@
  * getResources
  *
  * @package getResources
- * @version 1.3.1
- * @release pl
  * @author Jason Coward <jason@modx.com>
  */
 $mtime = microtime();
@@ -33,7 +31,7 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 /* set package info */
 define('PKG_NAME','getresources');
-define('PKG_VERSION','1.3.1');
+define('PKG_VERSION','1.4.0');
 define('PKG_RELEASE','pl');
 
 /* load builder */
