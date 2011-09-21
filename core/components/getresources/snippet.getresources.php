@@ -49,6 +49,8 @@
  * sortdirTV - (Opt) Order which to sort by a TV [default=DESC]
  * limit - (Opt) Limits the number of resources returned [default=5]
  * offset - (Opt) An offset of resources returned by the criteria to skip [default=0]
+ * dbCacheFlag - (Opt) Controls caching of db queries; 0|false = do not cache result set; 1 = cache result set
+ * according to cache settings, any other integer value = number of seconds to cache result set [default=0]
  *
  * OPTIONS
  *
@@ -106,6 +108,17 @@ $sortdirTV = isset($sortdirTV) ? $sortdirTV : 'DESC';
 $limit = isset($limit) ? (integer) $limit : 5;
 $offset = isset($offset) ? (integer) $offset : 0;
 $totalVar = !empty($totalVar) ? $totalVar : 'total';
+
+$dbCacheFlag = !isset($dbCacheFlag) ? false : $dbCacheFlag;
+if (is_string($dbCacheFlag) || is_numeric($dbCacheFlag)) {
+    if ($dbCacheFlag == '0') {
+        $dbCacheFlag = false;
+    } elseif ($dbCacheFlag == '1') {
+        $dbCacheFlag = true;
+    } else {
+        $dbCacheFlag = (integer) $dbCacheFlag;
+    }
+}
 
 /* build query */
 $contextResourceTbl = $modx->getTableName('modContextResource');
@@ -287,7 +300,7 @@ if (!empty($debug)) {
     $criteria->prepare();
     $modx->log(modX::LOG_LEVEL_ERROR, $criteria->toSQL());
 }
-$collection = $modx->getCollection('modResource', $criteria);
+$collection = $modx->getCollection('modResource', $criteria, $dbCacheFlag);
 
 $idx = !empty($idx) && $idx !== '0' ? (integer) $idx : 1;
 $first = empty($first) && $first !== '0' ? 1 : (integer) $first;

@@ -236,7 +236,7 @@ $properties = array(
     ),
     array(
         'name' => 'debug',
-        'desc' => 'If true, will send the SQL query to the MODx log. Defaults to false.',
+        'desc' => 'If true, will send the SQL query to the MODX log. Defaults to false.',
         'type' => 'combo-boolean',
         'options' => '',
         'value' => false,
@@ -247,6 +247,13 @@ $properties = array(
         'type' => 'textfield',
         'options' => '',
         'value' => '',
+    ),
+    array(
+        'name' => 'dbCacheFlag',
+        'desc' => 'Determines how result sets are cached if cache_db is enabled in MODX. 0|false = do not cache result set; 1 = cache result set according to cache settings, any other integer value = number of seconds to cache result set',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '0',
     ),
 );
 
