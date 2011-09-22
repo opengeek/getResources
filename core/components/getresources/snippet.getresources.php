@@ -74,6 +74,8 @@
  * last - (Opt) Define the idx which represents the last resource (see tplLast) [default=# of
  * resources being summarized + first - 1]
  * outputSeparator - (Opt) An optional string to separate each tpl instance [default="\n"]
+ * toJsonPlaceholder - (Opt) Outputs all fetched resources/fields as Json-string to specified placeholder for
+ * reusing and modifying the output in different ways by other snippets. 
  *
  */
 $output = array();
@@ -394,6 +396,11 @@ foreach ($collection as $resourceId => $resource) {
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
+$toJsonPlaceholder = $modx->getOption('toJsonPlaceholder', $scriptProperties, false);
+if ($toJsonPlaceholder) {
+    $modx->setPlaceholder($toJsonPlaceholder, $modx->toJson($properties));
+    return '';
+}
     $resourceTpl = '';
     $tplidx = 'tpl_' . $idx;
     if (!empty($$tplidx)) $resourceTpl = parseTpl($$tplidx, $properties);
