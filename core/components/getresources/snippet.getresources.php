@@ -74,6 +74,8 @@
  * last - (Opt) Define the idx which represents the last resource (see tplLast) [default=# of
  * resources being summarized + first - 1]
  * outputSeparator - (Opt) An optional string to separate each tpl instance [default="\n"]
+ * toJsonPlaceholder - (Opt) Outputs all fetched resources/fields as Json-string to specified placeholder for
+ * reusing and modifying the output in different ways by other snippets. 
  *
  */
 $output = array();
@@ -394,30 +396,40 @@ foreach ($collection as $resourceId => $resource) {
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
-    $resourceTpl = '';
-    $tplidx = 'tpl_' . $idx;
-    if (!empty($$tplidx)) $resourceTpl = parseTpl($$tplidx, $properties);
-    switch ($idx) {
-        case $first:
-            if (!empty($tplFirst)) $resourceTpl = parseTpl($tplFirst, $properties);
-            break;
-        case $last:
-            if (!empty($tplLast)) $resourceTpl = parseTpl($tplLast, $properties);
-            break;
-    }
-    if ($odd && empty($resourceTpl) && !empty($tplOdd)) $resourceTpl = parseTpl($tplOdd, $properties);
-    if (!empty($tpl) && empty($resourceTpl)) $resourceTpl = parseTpl($tpl, $properties);
-    if (empty($resourceTpl)) {
-        $chunk = $modx->newObject('modChunk');
-        $chunk->setCacheable(false);
-        $output[]= $chunk->process(array(), '<pre>' . print_r($properties, true) .'</pre>');
-    } else {
-        $output[]= $resourceTpl;
+    if ($toJsonPlaceholder) {
+        $output[] = $properties;
+    }else{
+        $resourceTpl = '';
+        $tplidx = 'tpl_' . $idx;
+        if (!empty($$tplidx)) $resourceTpl = parseTpl($$tplidx, $properties);
+        switch ($idx) {
+            case $first:
+                if (!empty($tplFirst)) $resourceTpl = parseTpl($tplFirst, $properties);
+                break;
+            case $last:
+                if (!empty($tplLast)) $resourceTpl = parseTpl($tplLast, $properties);
+                break;
+        }
+        if ($odd && empty($resourceTpl) && !empty($tplOdd)) $resourceTpl = parseTpl($tplOdd, $properties);
+        if (!empty($tpl) && empty($resourceTpl)) $resourceTpl = parseTpl($tpl, $properties);
+        if (empty($resourceTpl)) {
+            $chunk = $modx->newObject('modChunk');
+            $chunk->setCacheable(false);
+            $output[]= $chunk->process(array(), '<pre>' . print_r($properties, true) .'</pre>');
+        } else {
+            $output[]= $resourceTpl;
+        }    
     }
     $idx++;
 }
 
 /* output */
+$toJsonPlaceholder = $modx->getOption('toJsonPlaceholder', $scriptProperties, false);
+if ($toJsonPlaceholder) {
+    $modx->setPlaceholder($toJsonPlaceholder, $modx->toJson($output));
+    return '';
+}
+
 $toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders',$scriptProperties,false);
 if (!empty($toSeparatePlaceholders)) {
     $modx->setPlaceholders($output,$toSeparatePlaceholders);
