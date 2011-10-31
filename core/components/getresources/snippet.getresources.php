@@ -376,7 +376,7 @@ foreach ($collection as $resourceId => $resource) {
         }
         foreach ($templateVars as $tvId => $templateVar) {
             if (!empty($includeTVList) && !in_array($templateVar->get('name'), $includeTVList)) continue;
-            if ($processTVs && (empty($processTVList) || in_array($templateVar->get('name'), $processTVs))) {
+            if ($processTVs && (empty($processTVList) || in_array($templateVar->get('name'), $processTVList))) {
                 $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->renderOutput($resource->get('id'));
             } else {
                 $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->getValue($resource->get('id'));
