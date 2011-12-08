@@ -1,5 +1,8 @@
 Changelog for getResources.
 
+- [#57] Add support for factor-based tpls
+- [#54], [#55] Fix processTVList feature
+
 getResources 1.4.0-pl (September 21, 2011)
 ====================================
 - [#50] Use children of parents from other contexts
