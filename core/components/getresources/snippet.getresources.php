@@ -396,13 +396,28 @@ foreach ($collection as $resourceId => $resource) {
     );
     $resourceTpl = '';
     $tplidx = 'tpl_' . $idx;
-    if (!empty($$tplidx)) $resourceTpl = parseTpl($$tplidx, $properties);
     switch ($idx) {
         case $first:
             if (!empty($tplFirst)) $resourceTpl = parseTpl($tplFirst, $properties);
             break;
         case $last:
             if (!empty($tplLast)) $resourceTpl = parseTpl($tplLast, $properties);
+            break;
+        default:
+            if (!empty($$tplidx)) {
+                $resourceTpl = parseTpl($$tplidx, $properties);
+            } else {
+                $divisors = getDivisors($idx);
+                if (!empty($divisors)) {
+                    foreach ($divisors as $divisor) {
+                        $tplnth = 'tpl_n' . $divisor;
+                        if (!empty($$tplnth)) {
+                            $resourceTpl = parseTpl($$tplnth, $properties);
+                            break;
+                        }
+                    }
+                }
+            }
             break;
     }
     if ($odd && empty($resourceTpl) && !empty($tplOdd)) $resourceTpl = parseTpl($tplOdd, $properties);
