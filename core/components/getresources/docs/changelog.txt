@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+getResources 1.4.2-pl (December 9, 2011)
+====================================
 - [#25] Add new operators to tvFilters
 - [#37] Consider default values with tvFilters
 - [#57] Fix tpl overrides and improve order
