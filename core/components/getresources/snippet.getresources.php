@@ -211,26 +211,68 @@ if (!empty($tvFilters)) {
     $tmplVarTbl = $modx->getTableName('modTemplateVar');
     $tmplVarResourceTbl = $modx->getTableName('modTemplateVarResource');
     $conditions = array();
+    $operators = array(
+        '<=>' => '<=>',
+        '===' => '=',
+        '!==' => '!=',
+        '<>' => '<>',
+        '==' => 'LIKE',
+        '!=' => 'NOT LIKE',
+        '<<' => '<',
+        '<=' => '<=',
+        '=<' => '=<',
+        '>>' => '>',
+        '>=' => '>=',
+        '=>' => '=>'
+    );
     foreach ($tvFilters as $fGroup => $tvFilter) {
         $filterGroup = array();
         $filters = explode(',', $tvFilter);
         $multiple = count($filters) > 0;
         foreach ($filters as $filter) {
-            $f = explode('==', $filter);
+            $operator = '==';
+            $sqlOperator = 'LIKE';
+            foreach ($operators as $op => $opSymbol) {
+                if (strpos($filter, $op, 1) !== false) {
+                    $operator = $op;
+                    $sqlOperator = $opSymbol;
+                    break;
+                }
+            }
+            $tvValueField = 'tvr.value';
+            $tvDefaultField = 'tv.default_text';
+            $f = explode($operator, $filter);
             if (count($f) == 2) {
                 $tvName = $modx->quote($f[0]);
-                $tvValue = $modx->quote($f[1]);
-                if ($multiple) {
-                    $filterGroup[] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                if (is_numeric($f[1]) && !in_array($sqlOperator, array('LIKE', 'NOT LIKE'))) {
+                    $tvValue = $f[1];
+                    if ($f[1] == (integer)$f[1]) {
+                        $tvValueField = "CAST({$tvValueField} AS SIGNED INTEGER)";
+                        $tvDefaultField = "CAST({$tvDefaultField} AS SIGNED INTEGER)";
+                    } else {
+                        $tvValueField = "CAST({$tvValueField} AS DECIMAL)";
+                        $tvDefaultField = "CAST({$tvDefaultField} AS DECIMAL)";
+                    }
                 } else {
-                    $filterGroup = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                    $tvValue = $modx->quote($f[1]);
+                }
+                if ($multiple) {
+                    $filterGroup[] =
+                        "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
+                        "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND {$tvDefaultField} {$sqlOperator} {$tvValue} AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
+                        ")";
+                } else {
+                    $filterGroup =
+                        "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
+                        "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND {$tvDefaultField} {$sqlOperator} {$tvValue} AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
+                        ")";
                 }
             } elseif (count($f) == 1) {
                 $tvValue = $modx->quote($f[0]);
                 if ($multiple) {
-                    $filterGroup[] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                    $filterGroup[] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
                 } else {
-                    $filterGroup = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON tvr.value LIKE {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
+                    $filterGroup = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
                 }
             }
         }
