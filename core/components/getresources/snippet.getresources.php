@@ -396,32 +396,35 @@ foreach ($collection as $resourceId => $resource) {
     );
     $resourceTpl = '';
     $tplidx = 'tpl_' . $idx;
-    switch ($idx) {
-        case $first:
-            if (!empty($tplFirst)) $resourceTpl = parseTpl($tplFirst, $properties);
-            break;
-        case $last:
-            if (!empty($tplLast)) $resourceTpl = parseTpl($tplLast, $properties);
-            break;
-        default:
-            if (!empty($$tplidx)) {
-                $resourceTpl = parseTpl($$tplidx, $properties);
-            } else {
-                $divisors = getDivisors($idx);
-                if (!empty($divisors)) {
-                    foreach ($divisors as $divisor) {
-                        $tplnth = 'tpl_n' . $divisor;
-                        if (!empty($$tplnth)) {
-                            $resourceTpl = parseTpl($$tplnth, $properties);
-                            break;
-                        }
+    if (!empty($$tplidx)) {
+        $resourceTpl = parseTpl($$tplidx, $properties);
+    }
+    if ($idx > 1 && empty($resourceTpl)) {
+        $divisors = getDivisors($idx);
+        if (!empty($divisors)) {
+            foreach ($divisors as $divisor) {
+                $tplnth = 'tpl_n' . $divisor;
+                if (!empty($$tplnth)) {
+                    $resourceTpl = parseTpl($$tplnth, $properties);
+                    if (!empty($resourceTpl)) {
+                        break;
                     }
                 }
             }
-            break;
+        }
     }
-    if ($odd && empty($resourceTpl) && !empty($tplOdd)) $resourceTpl = parseTpl($tplOdd, $properties);
-    if (!empty($tpl) && empty($resourceTpl)) $resourceTpl = parseTpl($tpl, $properties);
+    if ($idx == $first && empty($resourceTpl) && !empty($tplFirst)) {
+        $resourceTpl = parseTpl($tplFirst, $properties);
+    }
+    if ($idx == $last && empty($resourceTpl) && !empty($tplLast)) {
+        $resourceTpl = parseTpl($tplLast, $properties);
+    }
+    if ($odd && empty($resourceTpl) && !empty($tplOdd)) {
+        $resourceTpl = parseTpl($tplOdd, $properties);
+    }
+    if (!empty($tpl) && empty($resourceTpl)) {
+        $resourceTpl = parseTpl($tpl, $properties);
+    }
     if (empty($resourceTpl)) {
         $chunk = $modx->newObject('modChunk');
         $chunk->setCacheable(false);

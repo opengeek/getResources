@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+- [#57] Fix tpl overrides and improve order
+
 getResources 1.4.1-pl (December 8, 2011)
 ====================================
 - [#57] Add support for factor-based tpls
