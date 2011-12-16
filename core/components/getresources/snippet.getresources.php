@@ -536,10 +536,6 @@ foreach ($collection as $resourceId => $resource) {
                     break;
             }
         }
-    	
-    	
-    	
-
     	  if(!empty($tplCon)) {
             $resourceTpl = parseTpl($tplCon, $properties);
         }
