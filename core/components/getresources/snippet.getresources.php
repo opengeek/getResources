@@ -464,6 +464,86 @@ foreach ($collection as $resourceId => $resource) {
     if ($odd && empty($resourceTpl) && !empty($tplOdd)) {
         $resourceTpl = parseTpl($tplOdd, $properties);
     }
+    if (!empty($tplCondition) && !empty($conditionalTpls) && empty($resourceTpl)) {
+    	  $conTpls = $modx->fromJSON($conditionalTpls);
+    	  $subject = $properties[$tplCondition];
+    	  $tplOperator = !empty($tplOperator) ? $tplOperator : '=';
+    	  $tplOperator = strtolower($tplOperator);
+    	  $tplCon = '';
+        foreach ($conTpls as $operand => $conditionalTpl) {
+            switch ($tplOperator) {
+                case '!=':
+                case 'neq':
+                case 'not':
+                case 'isnot':
+                case 'isnt':
+                case 'unequal':
+                case 'notequal':
+                    $tplCon = (($subject != $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '<':
+                case 'lt':
+                case 'less':
+                case 'lessthan':
+                    $tplCon = (($subject < $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '>':
+                case 'gt':
+                case 'greater':
+                case 'greaterthan':
+                    $tplCon = (($subject > $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '<=':
+                case 'lte':
+                case 'lessthanequals':
+                case 'lessthanorequalto':
+                    $tplCon = (($subject <= $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '>=':
+                case 'gte':
+                case 'greaterthanequals':
+                case 'greaterthanequalto':
+                    $tplCon = (($subject >= $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case 'isempty':
+                case 'empty':
+                    $tplCon = empty($subject) ? $conditionalTpl : $tplCon;
+                    break;
+                case '!empty':
+                case 'notempty':
+                case 'isnotempty':
+                    $tplCon = !empty($subject) && $subject != '' ? $conditionalTpl : $tplCon;
+                    break;
+                case 'isnull':
+                case 'null':
+                    $tplCon = $subject == null || strtolower($subject) == 'null' ? $conditionalTpl : $tplCon;
+                    break;
+                case 'inarray':
+                case 'in_array':
+                case 'ia':
+                    $operand = explode(',',$operand);
+                    $tplCon = in_array($subject,$operand) ? $conditionalTpl : $tplCon;
+                    break;
+                case '==':
+                case '=':
+                case 'eq':
+                case 'is':
+                case 'equal':
+                case 'equals':
+                case 'equalto':
+                default:
+                    $tplCon = (($subject == $operand) ? $conditionalTpl : $tplCon);
+                    break;
+            }
+        }
+    	
+    	
+    	
+
+    	  if(!empty($tplCon)) {
+            $resourceTpl = parseTpl($tplCon, $properties);
+        }
+    }    
     if (!empty($tpl) && empty($resourceTpl)) {
         $resourceTpl = parseTpl($tpl, $properties);
     }
