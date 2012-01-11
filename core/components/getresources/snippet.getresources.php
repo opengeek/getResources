@@ -31,7 +31,7 @@
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
- * delimiters and two value search formats. THe first delimiter || represents a logical OR and the
+ * delimiters and two value search formats. The first delimiter || represents a logical OR and the
  * primary grouping mechanism.  Within each group you can provide a comma-delimited list of values.
  * These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the
  * value, indicating you are searching for the value in any TemplateVar tied to the Resource. An
@@ -39,6 +39,14 @@
  * [NOTE: filtering by values uses a LIKE query and % is considered a wildcard.]
  * [NOTE: this only looks at the raw value set for specific Resource, i. e. there must be a value
  * specifically set for the Resource and it is not evaluated.]
+ *
+ * tvFiltersAndDelimiter - (Opt) Custom delimiter for logical AND, default ',', in case you want to
+ * match a literal comma in the tvFilters. E.g. &tvFiltersAndDelimiter=`&&`
+ * &tvFilters=`filter1==foo,bar&&filter2==baz` [default=,]
+ *
+ * tvFiltersOrDelimiter - (Opt) Custom delimiter for logical OR, default '||', in case you want to
+ * match a literal '||' in the tvFilters. E.g. &tvFiltersOrDelimiter=`|OR|`
+ * &tvFilters=`filter1==foo||bar|OR|filter2==baz` [default=||]
  *
  * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
@@ -92,7 +100,9 @@ array_walk($parents, 'trim');
 $parents = array_unique($parents);
 $depth = isset($depth) ? (integer) $depth : 10;
 
-$tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
+$tvFiltersOrDelimiter = isset($tvFiltersOrDelimiter) ? $tvFiltersOrDelimiter : '||';
+$tvFiltersAndDelimiter = isset($tvFiltersAndDelimiter) ? $tvFiltersAndDelimiter : ',';
+$tvFilters = !empty($tvFilters) ? explode($tvFiltersOrDelimiter, $tvFilters) : array();
 
 $where = !empty($where) ? $modx->fromJSON($where) : array();
 $showUnpublished = !empty($showUnpublished) ? true : false;
@@ -227,7 +237,7 @@ if (!empty($tvFilters)) {
     );
     foreach ($tvFilters as $fGroup => $tvFilter) {
         $filterGroup = array();
-        $filters = explode(',', $tvFilter);
+        $filters = explode($tvFiltersAndDelimiter, $tvFilter);
         $multiple = count($filters) > 0;
         foreach ($filters as $filter) {
             $operator = '==';
