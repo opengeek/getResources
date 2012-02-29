@@ -410,18 +410,21 @@ $templateVars = array();
 if (!empty($includeTVs) && !empty($includeTVList)) {
     $templateVars = $modx->getCollection('modTemplateVar', array('name:IN' => $includeTVList));
 }
+/** @var modResource $resource */
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
     if (!empty($includeTVs)) {
         if (empty($includeTVList)) {
             $templateVars = $resource->getMany('TemplateVars');
         }
+        /** @var modTemplateVar $templateVar */
         foreach ($templateVars as $tvId => $templateVar) {
             if (!empty($includeTVList) && !in_array($templateVar->get('name'), $includeTVList)) continue;
             if ($processTVs && (empty($processTVList) || in_array($templateVar->get('name'), $processTVList))) {
                 $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->renderOutput($resource->get('id'));
             } else {
-                $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->getValue($resource->get('id'));
+                $value = $templateVar->getValue($resource->get('id'));
+                $tvs[$tvPrefix . $templateVar->get('name')] = method_exists($templateVar,'prepareOutput') ? $templateVar->prepareOutput($value) : $value;
             }
         }
     }
