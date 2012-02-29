@@ -31,8 +31,8 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 /* set package info */
 define('PKG_NAME','getresources');
-define('PKG_VERSION','1.4.2');
-define('PKG_RELEASE','pl');
+define('PKG_VERSION','1.4.3');
+define('PKG_RELEASE','dev');
 
 /* load builder */
 $modx->loadClass('transport.modPackageBuilder','',false, true);

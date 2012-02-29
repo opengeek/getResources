@@ -193,6 +193,20 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'prepareTVs',
+        'desc' => 'Indicates if TemplateVar values that are not processed fully should be prepared before being returned. Defaults to true.',
+        'type' => 'combo-boolean',
+        'options' => '',
+        'value' => true,
+    ),
+    array(
+        'name' => 'prepareTVList',
+        'desc' => 'Limits prepared TVs to those specified as a comma-delimited list of TV names; note only includedTVs will be available for preparing if specified. Defaults to empty.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'tvPrefix',
         'desc' => 'The prefix for TemplateVar properties. Defaults to: tv.',
         'type' => 'textfield',

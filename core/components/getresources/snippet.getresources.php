@@ -63,6 +63,9 @@
  * to each resource template [default=0]
  * includeTVList - (Opt) Limits the TemplateVars that are included if includeTVs is true to those specified
  * by name in a comma-delimited list [default=]
+ * prepareTVs - (Opt) Prepares media-source dependent TemplateVar values [default=1]
+ * prepareTVList - (Opt) Limits the TVs that are prepared to those specified by name in a comma-delimited
+ * list [default=]
  * processTVs - (Opt) Indicates if TemplateVar values should be rendered as they would on the
  * resource being summarized [default=0]
  * processTVList - (opt) Limits the TemplateVars that are processed if included to those specified
@@ -86,6 +89,8 @@ $includeTVs = !empty($includeTVs) ? true : false;
 $includeTVList = !empty($includeTVList) ? explode(',', $includeTVList) : array();
 $processTVs = !empty($processTVs) ? true : false;
 $processTVList = !empty($processTVList) ? explode(',', $processTVList) : array();
+$prepareTVs = !empty($prepareTVs) ? true : false;
+$prepareTVList = !empty($prepareTVList) ? explode(',', $prepareTVList) : array();
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
 $parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
 array_walk($parents, 'trim');
@@ -424,7 +429,10 @@ foreach ($collection as $resourceId => $resource) {
                 $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->renderOutput($resource->get('id'));
             } else {
                 $value = $templateVar->getValue($resource->get('id'));
-                $tvs[$tvPrefix . $templateVar->get('name')] = method_exists($templateVar,'prepareOutput') ? $templateVar->prepareOutput($value) : $value;
+                if ($prepareTVs && method_exists($templateVar, 'prepareOutput') && (empty($prepareTVList) || in_array($templateVar->get('name'), $prepareTVList))) {
+                    $value = $templateVar->prepareOutput($value);
+                }
+                $tvs[$tvPrefix . $templateVar->get('name')] = $value;
             }
         }
     }
