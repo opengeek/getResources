@@ -27,7 +27,7 @@
  *
  * contexts - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
  * parents will be used (all contexts if 0 is specified) [default=]
- * 
+ *
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
@@ -432,9 +432,9 @@ foreach ($collection as $resourceId => $resource) {
             'idx' => $idx
             ,'first' => $first
             ,'last' => $last
-			,'_first' => ($idx == $first)
-			,'_last' => ($idx == $last)
-			,'_alt' => $odd
+            ,'_first' => ($idx == $first)
+            ,'_last' => ($idx == $last)
+            ,'_alt' => $odd
         )
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
