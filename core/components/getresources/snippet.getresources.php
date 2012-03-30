@@ -432,9 +432,9 @@ foreach ($collection as $resourceId => $resource) {
             'idx' => $idx
             ,'first' => $first
             ,'last' => $last
-			,'_first' => ($idx == $first)
-			,'_last' => ($idx == $last)
-			,'_alt' => $odd
+            ,'_first' => ($idx == $first)
+            ,'_last' => ($idx == $last)
+            ,'_alt' => $odd
         )
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
