@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- [#63] Give tplFirst/tplLast precedence over tpl_X/tpl_nX
 - Automatically prepare TV values for media-source dependent TVs
 
 getResources 1.4.2-pl (December 9, 2011)

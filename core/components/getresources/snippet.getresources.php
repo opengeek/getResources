@@ -448,8 +448,14 @@ foreach ($collection as $resourceId => $resource) {
         ,$tvs
     );
     $resourceTpl = '';
+    if ($idx == $first && !empty($tplFirst)) {
+        $resourceTpl = parseTpl($tplFirst, $properties);
+    }
+    if ($idx == $last && empty($resourceTpl) && !empty($tplLast)) {
+        $resourceTpl = parseTpl($tplLast, $properties);
+    }
     $tplidx = 'tpl_' . $idx;
-    if (!empty($$tplidx)) {
+    if (empty($resourceTpl) && !empty($$tplidx)) {
         $resourceTpl = parseTpl($$tplidx, $properties);
     }
     if ($idx > 1 && empty($resourceTpl)) {
@@ -465,12 +471,6 @@ foreach ($collection as $resourceId => $resource) {
                 }
             }
         }
-    }
-    if ($idx == $first && empty($resourceTpl) && !empty($tplFirst)) {
-        $resourceTpl = parseTpl($tplFirst, $properties);
-    }
-    if ($idx == $last && empty($resourceTpl) && !empty($tplLast)) {
-        $resourceTpl = parseTpl($tplLast, $properties);
     }
     if ($odd && empty($resourceTpl) && !empty($tplOdd)) {
         $resourceTpl = parseTpl($tplOdd, $properties);
