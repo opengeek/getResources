@@ -25,7 +25,7 @@
  *
  * parents - Comma-delimited list of ids serving as parents
  *
- * contexts - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
+ * context - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
  * parents will be used (all contexts if 0 is specified) [default=]
  * 
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
