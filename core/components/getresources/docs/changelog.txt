@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- [#60] Allow custom delimiters for tvFilters
 - [#63] Give tplFirst/tplLast precedence over tpl_X/tpl_nX
 - Automatically prepare TV values for media-source dependent TVs
 
