@@ -5,8 +5,7 @@
  * A general purpose Resource listing and summarization snippet for MODX 2.x.
  *
  * @author Jason Coward
- * @copyright Copyright 2010-2011, Jason Coward
- * @version 1.4.2-pl - Dec 9, 2011
+ * @copyright Copyright 2010-2012, Jason Coward
  *
  * TEMPLATES
  *
@@ -25,13 +24,13 @@
  *
  * parents - Comma-delimited list of ids serving as parents
  *
- * contexts - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
+ * context - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
  * parents will be used (all contexts if 0 is specified) [default=]
  * 
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
- * delimiters and two value search formats. THe first delimiter || represents a logical OR and the
+ * delimiters and two value search formats. The first delimiter || represents a logical OR and the
  * primary grouping mechanism.  Within each group you can provide a comma-delimited list of values.
  * These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the
  * value, indicating you are searching for the value in any TemplateVar tied to the Resource. An
@@ -39,6 +38,14 @@
  * [NOTE: filtering by values uses a LIKE query and % is considered a wildcard.]
  * [NOTE: this only looks at the raw value set for specific Resource, i. e. there must be a value
  * specifically set for the Resource and it is not evaluated.]
+ *
+ * tvFiltersAndDelimiter - (Opt) Custom delimiter for logical AND, default ',', in case you want to
+ * match a literal comma in the tvFilters. E.g. &tvFiltersAndDelimiter=`&&`
+ * &tvFilters=`filter1==foo,bar&&filter2==baz` [default=,]
+ *
+ * tvFiltersOrDelimiter - (Opt) Custom delimiter for logical OR, default '||', in case you want to
+ * match a literal '||' in the tvFilters. E.g. &tvFiltersOrDelimiter=`|OR|`
+ * &tvFilters=`filter1==foo||bar|OR|filter2==baz` [default=||]
  *
  * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
@@ -63,6 +70,9 @@
  * to each resource template [default=0]
  * includeTVList - (Opt) Limits the TemplateVars that are included if includeTVs is true to those specified
  * by name in a comma-delimited list [default=]
+ * prepareTVs - (Opt) Prepares media-source dependent TemplateVar values [default=1]
+ * prepareTVList - (Opt) Limits the TVs that are prepared to those specified by name in a comma-delimited
+ * list [default=]
  * processTVs - (Opt) Indicates if TemplateVar values should be rendered as they would on the
  * resource being summarized [default=0]
  * processTVList - (opt) Limits the TemplateVars that are processed if included to those specified
@@ -86,13 +96,17 @@ $includeTVs = !empty($includeTVs) ? true : false;
 $includeTVList = !empty($includeTVList) ? explode(',', $includeTVList) : array();
 $processTVs = !empty($processTVs) ? true : false;
 $processTVList = !empty($processTVList) ? explode(',', $processTVList) : array();
+$prepareTVs = !empty($prepareTVs) ? true : false;
+$prepareTVList = !empty($prepareTVList) ? explode(',', $prepareTVList) : array();
 $tvPrefix = isset($tvPrefix) ? $tvPrefix : 'tv.';
 $parents = (!empty($parents) || $parents === '0') ? explode(',', $parents) : array($modx->resource->get('id'));
 array_walk($parents, 'trim');
 $parents = array_unique($parents);
 $depth = isset($depth) ? (integer) $depth : 10;
 
-$tvFilters = !empty($tvFilters) ? explode('||', $tvFilters) : array();
+$tvFiltersOrDelimiter = isset($tvFiltersOrDelimiter) ? $tvFiltersOrDelimiter : '||';
+$tvFiltersAndDelimiter = isset($tvFiltersAndDelimiter) ? $tvFiltersAndDelimiter : ',';
+$tvFilters = !empty($tvFilters) ? explode($tvFiltersOrDelimiter, $tvFilters) : array();
 
 $where = !empty($where) ? $modx->fromJSON($where) : array();
 $showUnpublished = !empty($showUnpublished) ? true : false;
@@ -227,7 +241,7 @@ if (!empty($tvFilters)) {
     );
     foreach ($tvFilters as $fGroup => $tvFilter) {
         $filterGroup = array();
-        $filters = explode(',', $tvFilter);
+        $filters = explode($tvFiltersAndDelimiter, $tvFilter);
         $multiple = count($filters) > 0;
         foreach ($filters as $filter) {
             $operator = '==';
@@ -410,18 +424,24 @@ $templateVars = array();
 if (!empty($includeTVs) && !empty($includeTVList)) {
     $templateVars = $modx->getCollection('modTemplateVar', array('name:IN' => $includeTVList));
 }
+/** @var modResource $resource */
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
     if (!empty($includeTVs)) {
         if (empty($includeTVList)) {
             $templateVars = $resource->getMany('TemplateVars');
         }
+        /** @var modTemplateVar $templateVar */
         foreach ($templateVars as $tvId => $templateVar) {
             if (!empty($includeTVList) && !in_array($templateVar->get('name'), $includeTVList)) continue;
             if ($processTVs && (empty($processTVList) || in_array($templateVar->get('name'), $processTVList))) {
                 $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->renderOutput($resource->get('id'));
             } else {
-                $tvs[$tvPrefix . $templateVar->get('name')] = $templateVar->getValue($resource->get('id'));
+                $value = $templateVar->getValue($resource->get('id'));
+                if ($prepareTVs && method_exists($templateVar, 'prepareOutput') && (empty($prepareTVList) || in_array($templateVar->get('name'), $prepareTVList))) {
+                    $value = $templateVar->prepareOutput($value);
+                }
+                $tvs[$tvPrefix . $templateVar->get('name')] = $value;
             }
         }
     }
@@ -432,13 +452,20 @@ foreach ($collection as $resourceId => $resource) {
             'idx' => $idx
             ,'first' => $first
             ,'last' => $last
+            ,'odd' => $odd
         )
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
     $resourceTpl = '';
+    if ($idx == $first && !empty($tplFirst)) {
+        $resourceTpl = parseTpl($tplFirst, $properties);
+    }
+    if ($idx == $last && empty($resourceTpl) && !empty($tplLast)) {
+        $resourceTpl = parseTpl($tplLast, $properties);
+    }
     $tplidx = 'tpl_' . $idx;
-    if (!empty($$tplidx)) {
+    if (empty($resourceTpl) && !empty($$tplidx)) {
         $resourceTpl = parseTpl($$tplidx, $properties);
     }
     if ($idx > 1 && empty($resourceTpl)) {
@@ -455,15 +482,85 @@ foreach ($collection as $resourceId => $resource) {
             }
         }
     }
-    if ($idx == $first && empty($resourceTpl) && !empty($tplFirst)) {
-        $resourceTpl = parseTpl($tplFirst, $properties);
-    }
-    if ($idx == $last && empty($resourceTpl) && !empty($tplLast)) {
-        $resourceTpl = parseTpl($tplLast, $properties);
-    }
     if ($odd && empty($resourceTpl) && !empty($tplOdd)) {
         $resourceTpl = parseTpl($tplOdd, $properties);
     }
+    if (!empty($tplCondition) && !empty($conditionalTpls) && empty($resourceTpl)) {
+        $conTpls = $modx->fromJSON($conditionalTpls);
+        $subject = $properties[$tplCondition];
+        $tplOperator = !empty($tplOperator) ? $tplOperator : '=';
+        $tplOperator = strtolower($tplOperator);
+        $tplCon = '';
+        foreach ($conTpls as $operand => $conditionalTpl) {
+            switch ($tplOperator) {
+                case '!=':
+                case 'neq':
+                case 'not':
+                case 'isnot':
+                case 'isnt':
+                case 'unequal':
+                case 'notequal':
+                    $tplCon = (($subject != $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '<':
+                case 'lt':
+                case 'less':
+                case 'lessthan':
+                    $tplCon = (($subject < $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '>':
+                case 'gt':
+                case 'greater':
+                case 'greaterthan':
+                    $tplCon = (($subject > $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '<=':
+                case 'lte':
+                case 'lessthanequals':
+                case 'lessthanorequalto':
+                    $tplCon = (($subject <= $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case '>=':
+                case 'gte':
+                case 'greaterthanequals':
+                case 'greaterthanequalto':
+                    $tplCon = (($subject >= $operand) ? $conditionalTpl : $tplCon);
+                    break;
+                case 'isempty':
+                case 'empty':
+                    $tplCon = empty($subject) ? $conditionalTpl : $tplCon;
+                    break;
+                case '!empty':
+                case 'notempty':
+                case 'isnotempty':
+                    $tplCon = !empty($subject) && $subject != '' ? $conditionalTpl : $tplCon;
+                    break;
+                case 'isnull':
+                case 'null':
+                    $tplCon = $subject == null || strtolower($subject) == 'null' ? $conditionalTpl : $tplCon;
+                    break;
+                case 'inarray':
+                case 'in_array':
+                case 'ia':
+                    $operand = explode(',', $operand);
+                    $tplCon = in_array($subject, $operand) ? $conditionalTpl : $tplCon;
+                    break;
+                case '==':
+                case '=':
+                case 'eq':
+                case 'is':
+                case 'equal':
+                case 'equals':
+                case 'equalto':
+                default:
+                    $tplCon = (($subject == $operand) ? $conditionalTpl : $tplCon);
+                    break;
+            }
+        }
+        if (!empty($tplCon)) {
+            $resourceTpl = parseTpl($tplCon, $properties);
+        }
+    }    
     if (!empty($tpl) && empty($resourceTpl)) {
         $resourceTpl = parseTpl($tpl, $properties);
     }

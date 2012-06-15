@@ -1,8 +1,8 @@
 --------------------
 Snippet: getResources
 --------------------
-Version: 1.4.2-pl
-Released: December 9, 2011
+Version: 1.5.0-pl
+Released: June 15, 2012
 Since: December 28, 2009
 Author: Jason Coward <jason@modx.com>
 

@@ -116,6 +116,20 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'tvFiltersAndDelimiter',
+        'desc' => 'The delimiter to use to separate logical AND expressions in tvFilters. Default is ,',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => ',',
+    ),
+    array(
+        'name' => 'tvFiltersOrDelimiter',
+        'desc' => 'The delimiter to use to separate logical OR expressions in tvFilters. Default is ||',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '||',
+    ),
+    array(
         'name' => 'depth',
         'desc' => 'Integer value indicating depth to search for resources from each parent. Defaults to 10.',
         'type' => 'textfield',
@@ -193,6 +207,20 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'prepareTVs',
+        'desc' => 'Indicates if TemplateVar values that are not processed fully should be prepared before being returned. Defaults to true.',
+        'type' => 'combo-boolean',
+        'options' => '',
+        'value' => true,
+    ),
+    array(
+        'name' => 'prepareTVList',
+        'desc' => 'Limits prepared TVs to those specified as a comma-delimited list of TV names; note only includedTVs will be available for preparing if specified. Defaults to empty.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
         'name' => 'tvPrefix',
         'desc' => 'The prefix for TemplateVar properties. Defaults to: tv.',
         'type' => 'textfield',
@@ -258,6 +286,20 @@ $properties = array(
     array(
         'name' => 'context',
         'desc' => 'A comma-delimited list of context keys for limiting results. Default is empty, i.e. do not limit results by context.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
+        'name' => 'tplCondition',
+        'desc' => 'A condition to compare against the conditionalTpls property to map Resources to different tpls based on custom conditional logic.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
+        'name' => 'conditionalTpls',
+        'desc' => 'A JSON map of conditional operators and tpls to compare against the tplCondition property.',
         'type' => 'textfield',
         'options' => '',
         'value' => '',
