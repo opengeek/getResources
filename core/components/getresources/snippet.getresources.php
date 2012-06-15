@@ -487,11 +487,11 @@ foreach ($collection as $resourceId => $resource) {
         $resourceTpl = parseTpl($tplOdd, $properties);
     }
     if (!empty($tplCondition) && !empty($conditionalTpls) && empty($resourceTpl)) {
-    	  $conTpls = $modx->fromJSON($conditionalTpls);
-    	  $subject = $properties[$tplCondition];
-    	  $tplOperator = !empty($tplOperator) ? $tplOperator : '=';
-    	  $tplOperator = strtolower($tplOperator);
-    	  $tplCon = '';
+        $conTpls = $modx->fromJSON($conditionalTpls);
+        $subject = $properties[$tplCondition];
+        $tplOperator = !empty($tplOperator) ? $tplOperator : '=';
+        $tplOperator = strtolower($tplOperator);
+        $tplCon = '';
         foreach ($conTpls as $operand => $conditionalTpl) {
             switch ($tplOperator) {
                 case '!=':
@@ -543,8 +543,8 @@ foreach ($collection as $resourceId => $resource) {
                 case 'inarray':
                 case 'in_array':
                 case 'ia':
-                    $operand = explode(',',$operand);
-                    $tplCon = in_array($subject,$operand) ? $conditionalTpl : $tplCon;
+                    $operand = explode(',', $operand);
+                    $tplCon = in_array($subject, $operand) ? $conditionalTpl : $tplCon;
                     break;
                 case '==':
                 case '=':
@@ -558,7 +558,7 @@ foreach ($collection as $resourceId => $resource) {
                     break;
             }
         }
-    	  if(!empty($tplCon)) {
+        if (!empty($tplCon)) {
             $resourceTpl = parseTpl($tplCon, $properties);
         }
     }    
