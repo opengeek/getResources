@@ -453,6 +453,7 @@ foreach ($collection as $resourceId => $resource) {
             'idx' => $idx
             ,'first' => $first
             ,'last' => $last
+            ,'odd' => $odd
         )
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
