@@ -116,6 +116,20 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'tvFiltersAndDelimiter',
+        'desc' => 'The delimiter to use to separate logical AND expressions in tvFilters. Default is ,',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => ',',
+    ),
+    array(
+        'name' => 'tvFiltersOrDelimiter',
+        'desc' => 'The delimiter to use to separate logical OR expressions in tvFilters. Default is ||',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '||',
+    ),
+    array(
         'name' => 'depth',
         'desc' => 'Integer value indicating depth to search for resources from each parent. Defaults to 10.',
         'type' => 'textfield',
@@ -272,6 +286,20 @@ $properties = array(
     array(
         'name' => 'context',
         'desc' => 'A comma-delimited list of context keys for limiting results. Default is empty, i.e. do not limit results by context.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
+        'name' => 'tplCondition',
+        'desc' => 'A condition to compare against the conditionalTpls property to map Resources to different tpls based on custom conditional logic.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
+        'name' => 'conditionalTpls',
+        'desc' => 'A JSON map of conditional operators and tpls to compare against the tplCondition property.',
         'type' => 'textfield',
         'options' => '',
         'value' => '',

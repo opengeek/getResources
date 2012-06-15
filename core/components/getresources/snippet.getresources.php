@@ -5,8 +5,7 @@
  * A general purpose Resource listing and summarization snippet for MODX 2.x.
  *
  * @author Jason Coward
- * @copyright Copyright 2010-2011, Jason Coward
- * @version 1.4.2-pl - Dec 9, 2011
+ * @copyright Copyright 2010-2012, Jason Coward
  *
  * TEMPLATES
  *

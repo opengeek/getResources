@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+getResources 1.5.0-pl (June 15, 2012)
+====================================
 - [#58] Add tplCondition/conditionalTpls support
 - [#67] Add odd property
 - [#60] Allow custom delimiters for tvFilters
