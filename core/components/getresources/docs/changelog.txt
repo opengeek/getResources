@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- Add tplOperator property to default properties
 - [#73] Add between tplOperator to conditionalTpls
 
 getResources 1.5.0-pl (June 15, 2012)
