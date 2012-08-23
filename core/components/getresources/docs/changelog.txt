@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+- [#73] Add between tplOperator to conditionalTpls
+
 getResources 1.5.0-pl (June 15, 2012)
 ====================================
 - [#58] Add tplCondition/conditionalTpls support
