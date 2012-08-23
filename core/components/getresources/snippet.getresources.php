@@ -545,6 +545,13 @@ foreach ($collection as $resourceId => $resource) {
                     $operand = explode(',', $operand);
                     $tplCon = in_array($subject, $operand) ? $conditionalTpl : $tplCon;
                     break;
+                case 'between':
+                case 'range':
+                case '>=<':
+                case '><':
+                    $operand = explode(',', $operand);
+                    $tplCon = ($subject >= min($operand) && $subject <= max($operand)) ? $conditionalTpl : $tplCon;
+                    break;
                 case '==':
                 case '=':
                 case 'eq':
