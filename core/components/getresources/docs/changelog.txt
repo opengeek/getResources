@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+- Add tplWrapper for specifying a wrapper template
+
 getResources 1.5.1-pl (August 23, 2012)
 ====================================
 - Add tplOperator property to default properties
