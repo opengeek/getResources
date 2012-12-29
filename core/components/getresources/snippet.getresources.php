@@ -457,6 +457,7 @@ foreach ($collection as $resourceId => $resource) {
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
+    $properties['properties'] = $modx->toJSON($properties['properties']);
     $resourceTpl = '';
     if ($idx == $first && !empty($tplFirst)) {
         $resourceTpl = parseTpl($tplFirst, $properties);
