@@ -84,6 +84,8 @@
  * last - (Opt) Define the idx which represents the last resource (see tplLast) [default=# of
  * resources being summarized + first - 1]
  * outputSeparator - (Opt) An optional string to separate each tpl instance [default="\n"]
+ * returnJSON - (Opt) Returns a JSON encoded array. This is useful in the event that you need 
+ * to manipulate the returned data in a snippet. [default=]
  *
  */
 $output = array();
@@ -121,6 +123,7 @@ $sortdirTV = isset($sortdirTV) ? $sortdirTV : 'DESC';
 $limit = isset($limit) ? (integer) $limit : 5;
 $offset = isset($offset) ? (integer) $offset : 0;
 $totalVar = !empty($totalVar) ? $totalVar : 'total';
+$returnJSON = !empty($returnJSON) ? true : false;
 
 $dbCacheFlag = !isset($dbCacheFlag) ? false : $dbCacheFlag;
 if (is_string($dbCacheFlag) || is_numeric($dbCacheFlag)) {
@@ -574,7 +577,11 @@ foreach ($collection as $resourceId => $resource) {
     if (empty($resourceTpl)) {
         $chunk = $modx->newObject('modChunk');
         $chunk->setCacheable(false);
-        $output[]= $chunk->process(array(), '<pre>' . print_r($properties, true) .'</pre>');
+        if(!$returnJSON){
+            $output[]= $chunk->process(array(), '<pre>' . print_r($properties, true) .'</pre>');
+        }else{
+            $output[]= $properties;
+        }
     } else {
         $output[]= $resourceTpl;
     }
@@ -582,16 +589,20 @@ foreach ($collection as $resourceId => $resource) {
 }
 
 /* output */
-$toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders',$scriptProperties,false);
-if (!empty($toSeparatePlaceholders)) {
-    $modx->setPlaceholders($output,$toSeparatePlaceholders);
-    return '';
-}
+if(!$returnJSON){
+    $toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders',$scriptProperties,false);
+    if (!empty($toSeparatePlaceholders)) {
+        $modx->setPlaceholders($output,$toSeparatePlaceholders);
+        return '';
+    }
 
-$output = implode($outputSeparator, $output);
-$toPlaceholder = $modx->getOption('toPlaceholder',$scriptProperties,false);
-if (!empty($toPlaceholder)) {
-    $modx->setPlaceholder($toPlaceholder,$output);
-    return '';
+    $output = implode($outputSeparator, $output);
+    $toPlaceholder = $modx->getOption('toPlaceholder',$scriptProperties,false);
+    if (!empty($toPlaceholder)) {
+        $modx->setPlaceholder($toPlaceholder,$output);
+        return '';
+    }
+}else{
+    $output = json_encode($output);
 }
 return $output;
