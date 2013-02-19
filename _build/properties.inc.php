@@ -35,6 +35,20 @@ $properties = array(
         'value' => '',
     ),
     array(
+        'name' => 'tplWrapper',
+        'desc' => 'Name of a chunk serving as wrapper template for the Snippet output. This does not work with toSeparatePlaceholders.',
+        'type' => 'textfield',
+        'options' => '',
+        'value' => '',
+    ),
+    array(
+        'name' => 'wrapIfEmpty',
+        'desc' => 'Indicates if empty output should be wrapped by the tplWrapper, if specified. Defaults to false.',
+        'type' => 'combo-boolean',
+        'options' => '',
+        'value' => false,
+    ),
+    array(
         'name' => 'sortby',
         'desc' => 'A field name to sort by or JSON object of field names and sortdir for each field, e.g. {"publishedon":"ASC","createdon":"DESC"}. Defaults to publishedon.',
         'type' => 'textfield',

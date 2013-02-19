@@ -20,13 +20,16 @@
  * property)
  * tpl_{n} - (Opt) Name of a chunk serving as resource template for the nth resource
  *
+ * tplWrapper - (Opt) Name of a chunk serving as a wrapper template for the output
+ * [NOTE: Does not work with toSeparatePlaceholders]
+ *
  * SELECTION
  *
  * parents - Comma-delimited list of ids serving as parents
  *
  * context - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
  * parents will be used (all contexts if 0 is specified) [default=]
- * 
+ *
  * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
  *
  * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
@@ -84,6 +87,7 @@
  * last - (Opt) Define the idx which represents the last resource (see tplLast) [default=# of
  * resources being summarized + first - 1]
  * outputSeparator - (Opt) An optional string to separate each tpl instance [default="\n"]
+ * wrapIfEmpty - (Opt) Indicates if the tplWrapper should be applied if the output is empty [default=0]
  *
  */
 $output = array();
@@ -567,7 +571,7 @@ foreach ($collection as $resourceId => $resource) {
         if (!empty($tplCon)) {
             $resourceTpl = parseTpl($tplCon, $properties);
         }
-    }    
+    }
     if (!empty($tpl) && empty($resourceTpl)) {
         $resourceTpl = parseTpl($tpl, $properties);
     }
@@ -589,6 +593,13 @@ if (!empty($toSeparatePlaceholders)) {
 }
 
 $output = implode($outputSeparator, $output);
+
+$tplWrapper = $modx->getOption('tplWrapper', $scriptProperties, false);
+$wrapIfEmpty = $modx->getOption('wrapIfEmpty', $scriptProperties, false);
+if (!empty($tplWrapper) && ($wrapIfEmpty || !empty($output))) {
+    $output = parseTpl($tplWrapper, array('output' => $output));
+}
+
 $toPlaceholder = $modx->getOption('toPlaceholder',$scriptProperties,false);
 if (!empty($toPlaceholder)) {
     $modx->setPlaceholder($toPlaceholder,$output);
