@@ -192,7 +192,7 @@ foreach ($parents as $parent) {
         $parentArray[] = $parent;
     } else {
         $pContext = array_key_exists($parent, $pcMap) ? $pcMap[$parent] : false;
-        if ($debug) $modx->log(modX::LOG_LEVEL_ERROR, "context for {$parent} is {$pContext}");
+        if ($debug) $modx->log(modX::LOG_LEVEL_DEBUG, "context for {$parent} is {$pContext}");
         if ($pContext && $contextSpecified && !in_array($pContext, $contextArray, true)) {
             $parent = next($parents);
             continue;
@@ -413,7 +413,7 @@ if (!empty($limit)) $criteria->limit($limit, $offset);
 
 if (!empty($debug)) {
     $criteria->prepare();
-    $modx->log(modX::LOG_LEVEL_ERROR, $criteria->toSQL());
+    $modx->log(modX::LOG_LEVEL_DEBUG, $criteria->toSQL());
 }
 $collection = $modx->getCollection('modResource', $criteria, $dbCacheFlag);
 
