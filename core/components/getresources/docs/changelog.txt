@@ -1,5 +1,7 @@
 Changelog for getResources.
 
+- [#30][#80] Only dump properties for invalid tpl when debug enabled
+
 getResources 1.6.0-pl (February 19, 2013)
 ====================================
 - Add tplWrapper for specifying a wrapper template

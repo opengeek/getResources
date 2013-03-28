@@ -461,7 +461,7 @@ foreach ($collection as $resourceId => $resource) {
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
-    $resourceTpl = '';
+    $resourceTpl = false;
     if ($idx == $first && !empty($tplFirst)) {
         $resourceTpl = parseTpl($tplFirst, $properties);
     }
@@ -575,7 +575,7 @@ foreach ($collection as $resourceId => $resource) {
     if (!empty($tpl) && empty($resourceTpl)) {
         $resourceTpl = parseTpl($tpl, $properties);
     }
-    if (empty($resourceTpl)) {
+    if ($resourceTpl === false && !empty($debug)) {
         $chunk = $modx->newObject('modChunk');
         $chunk->setCacheable(false);
         $output[]= $chunk->process(array(), '<pre>' . print_r($properties, true) .'</pre>');
