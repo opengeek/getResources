@@ -417,7 +417,7 @@ if (!empty($debug)) {
 }
 $collection = $modx->getCollection('modResource', $criteria, $dbCacheFlag);
 
-$idx = !empty($idx) && $idx !== '0' ? (integer) $idx : 1;
+$idx = !empty($idx) || $idx === '0' ? (integer) $idx : 1;
 $first = empty($first) && $first !== '0' ? 1 : (integer) $first;
 $last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 
