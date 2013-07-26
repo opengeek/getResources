@@ -165,6 +165,13 @@ $properties = array(
         'value' => false,
     ),
     array(
+        'name' => 'processContent',
+        'desc' => 'Indicates if the content of each resource should be parsed before being returned in the results. Defaults to false.',
+        'type' => 'combo-boolean',
+        'options' => '',
+        'value' => false,
+    ),
+    array(
         'name' => 'includeTVs',
         'desc' => 'Indicates if TemplateVar values should be included in the properties available to each resource template. Defaults to false.',
         'type' => 'combo-boolean',

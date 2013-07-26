@@ -69,6 +69,7 @@
  *
  * includeContent - (Opt) Indicates if the content of each resource should be returned in the
  * results [default=0]
+ * processContent - (Opt) Indicates if the content of each resource should be parsed before being returned in the results [default=0]
  * includeTVs - (Opt) Indicates if TemplateVar values should be included in the properties available
  * to each resource template [default=0]
  * includeTVList - (Opt) Limits the TemplateVars that are included if includeTVs is true to those specified
@@ -96,6 +97,8 @@ $outputSeparator = isset($outputSeparator) ? $outputSeparator : "\n";
 /* set default properties */
 $tpl = !empty($tpl) ? $tpl : '';
 $includeContent = !empty($includeContent) ? true : false;
+$processContent = !empty($processContent) ? true : false;
+$maxIterations = (integer) $modx->getOption('max_iterations', null, 10);
 $includeTVs = !empty($includeTVs) ? true : false;
 $includeTVList = !empty($includeTVList) ? explode(',', $includeTVList) : array();
 $processTVs = !empty($processTVs) ? true : false;
@@ -428,6 +431,13 @@ $templateVars = array();
 if (!empty($includeTVs) && !empty($includeTVList)) {
     $templateVars = $modx->getCollection('modTemplateVar', array('name:IN' => $includeTVList));
 }
+
+if ($processContent) {
+    $currentResource = $modx->resource;
+    $currentResourceIdentifier = $modx->resourceIdentifier;
+    $currentElementCache = $modx->elementCache;
+}
+
 /** @var modResource $resource */
 foreach ($collection as $resourceId => $resource) {
     $tvs = array();
@@ -461,6 +471,13 @@ foreach ($collection as $resourceId => $resource) {
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
+    if ($includeContent && $processContent) {
+        $modx->resource = $resource;
+        $modx->resourceIdentifier = $resource->get('id');
+        $modx->elementCache = array();
+
+        $modx->getParser()->processElementTags('[[*content]]', $properties['content'], false, false, '[[', ']]', array(), $maxIterations);
+    }
     $resourceTpl = false;
     if ($idx == $first && !empty($tplFirst)) {
         $resourceTpl = parseTpl($tplFirst, $properties);
@@ -583,6 +600,12 @@ foreach ($collection as $resourceId => $resource) {
         $output[]= $resourceTpl;
     }
     $idx++;
+}
+
+if ($processContent) {
+    $modx->elementCache = $currentElementCache;
+    $modx->resourceIdentifier = $currentResourceIdentifier;
+    $modx->resource = $currentResource;
 }
 
 /* output */
