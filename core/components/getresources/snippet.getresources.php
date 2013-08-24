@@ -597,7 +597,8 @@ $output = implode($outputSeparator, $output);
 $tplWrapper = $modx->getOption('tplWrapper', $scriptProperties, false);
 $wrapIfEmpty = $modx->getOption('wrapIfEmpty', $scriptProperties, false);
 if (!empty($tplWrapper) && ($wrapIfEmpty || !empty($output))) {
-    $output = parseTpl($tplWrapper, array('output' => $output));
+    $properties['output'] = $output;
+    $output = parseTpl($tplWrapper, $properties);
 }
 
 $toPlaceholder = $modx->getOption('toPlaceholder',$scriptProperties,false);
