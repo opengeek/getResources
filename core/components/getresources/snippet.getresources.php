@@ -260,7 +260,13 @@ if (!empty($tvFilters)) {
             $tvValueField = 'tvr.value';
             $tvDefaultField = 'tv.default_text';
             $f = explode($operator, $filter);
-            if (count($f) == 2) {
+            if (count($f) >= 2) {
+                //Fix values with $operator in field value
+                if(count($f)>2) {
+                    $k=array_shift($f);
+                    $b=join($operator,$f);
+                    $f=array($k,$b);
+                }
                 $tvName = $modx->quote($f[0]);
                 if (is_numeric($f[1]) && !in_array($sqlOperator, array('LIKE', 'NOT LIKE'))) {
                     $tvValue = $f[1];
