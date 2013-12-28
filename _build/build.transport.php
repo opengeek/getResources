@@ -42,7 +42,7 @@ $builder->createPackage(PKG_NAME, PKG_VERSION, PKG_RELEASE);
 $modx->log(xPDO::LOG_LEVEL_INFO,'Adding in snippet.'); flush();
 $snippet= $modx->newObject('modSnippet');
 $snippet->set('name', 'getResources');
-$snippet->set('description', '<strong>'.PKG_VERSION.'-'.PKG_RELEASE.'</strong> A general purpose Resource listing and summarization snippet for MODx Revolution');
+$snippet->set('description', '<strong>'.PKG_VERSION.'-'.PKG_RELEASE.'</strong> A general purpose Resource listing and summarization snippet for MODX Revolution');
 $snippet->set('category', 0);
 $snippet->set('snippet', file_get_contents($sources['source_core'] . '/snippet.getresources.php'));
 $properties = include $sources['build'].'properties.inc.php';
