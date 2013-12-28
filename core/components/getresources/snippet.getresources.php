@@ -20,6 +20,12 @@
  * property)
  * tpl_{n} - (Opt) Name of a chunk serving as resource template for the nth resource
  *
+ * tplCondition - (Opt) Defines a field of the resource to evaluate against keys defined in the
+ * conditionalTpls property. Must be a resource field; does not work with Template Variables.
+ * conditionalTpls - (Opt) A JSON object defining a map of field values and the associated tpl to
+ * use when the field defined by tplCondition matches the value. [NOTE: tplOdd, tplFirst, tplLast,
+ * and tpl_{n} will take precedence over any defined conditionalTpls]
+ *
  * tplWrapper - (Opt) Name of a chunk serving as a wrapper template for the output
  * [NOTE: Does not work with toSeparatePlaceholders]
  *
