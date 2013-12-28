@@ -3,13 +3,11 @@
  * getResources
  *
  * @package getResources
- * @author Jason Coward <jason@modx.com>
+ * @author Jason Coward <jason@opengeek.com>
  */
-$mtime = microtime();
-$mtime = explode(" ", $mtime);
-$mtime = $mtime[1] + $mtime[0];
-$tstart = $mtime;
-set_time_limit(0);
+$tstart = microtime(true);
+
+@set_time_limit(0);
 
 /* define sources */
 $root = dirname(dirname(__FILE__)) . '/';
@@ -74,10 +72,7 @@ $builder->setPackageAttributes(array(
 /* zip up the package */
 $builder->pack();
 
-$mtime= microtime();
-$mtime= explode(" ", $mtime);
-$mtime= $mtime[1] + $mtime[0];
-$tend= $mtime;
+$tend= microtime(true);
 $totalTime= ($tend - $tstart);
 $totalTime= sprintf("%2.4f s", $totalTime);
 
