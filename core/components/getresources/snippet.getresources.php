@@ -597,9 +597,9 @@ foreach ($collection as $resourceId => $resource) {
 }
 
 /* output */
-$toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders', $scriptProperties,false);
+$toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders', $scriptProperties, false);
 if (!empty($toSeparatePlaceholders)) {
-    $modx->setPlaceholders($output,$toSeparatePlaceholders);
+    $modx->setPlaceholders($output, $toSeparatePlaceholders);
     return '';
 }
 
@@ -611,7 +611,7 @@ if (!empty($tplWrapper) && ($wrapIfEmpty || !empty($output))) {
     $output = parseTpl($tplWrapper, array_merge($scriptProperties, array('output' => $output)));
 }
 
-$toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties,false);
+$toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties, false);
 if (!empty($toPlaceholder)) {
     $modx->setPlaceholder($toPlaceholder, $output);
     return '';
