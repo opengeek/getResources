@@ -1,5 +1,6 @@
 Changelog for getResources.
 
+- Allow tvFilter values to contain filter operators
 - Allow 0-based idx
 - Pass scriptProperties to wrapperTpl
 - [#30][#80] Only dump properties for invalid tpl when debug enabled
