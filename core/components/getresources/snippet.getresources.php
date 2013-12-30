@@ -5,7 +5,7 @@
  * A general purpose Resource listing and summarization snippet for MODX 2.x.
  *
  * @author Jason Coward
- * @copyright Copyright 2010-2012, Jason Coward
+ * @copyright Copyright 2010-2013, Jason Coward
  *
  * TEMPLATES
  *
@@ -19,6 +19,12 @@
  * tplLast - (Opt) Name of a chunk serving as resource template for the last resource (see last
  * property)
  * tpl_{n} - (Opt) Name of a chunk serving as resource template for the nth resource
+ *
+ * tplCondition - (Opt) Defines a field of the resource to evaluate against keys defined in the
+ * conditionalTpls property. Must be a resource field; does not work with Template Variables.
+ * conditionalTpls - (Opt) A JSON object defining a map of field values and the associated tpl to
+ * use when the field defined by tplCondition matches the value. [NOTE: tplOdd, tplFirst, tplLast,
+ * and tpl_{n} will take precedence over any defined conditionalTpls]
  *
  * tplWrapper - (Opt) Name of a chunk serving as a wrapper template for the output
  * [NOTE: Does not work with toSeparatePlaceholders]
@@ -260,7 +266,12 @@ if (!empty($tvFilters)) {
             $tvValueField = 'tvr.value';
             $tvDefaultField = 'tv.default_text';
             $f = explode($operator, $filter);
-            if (count($f) == 2) {
+            if (count($f) >= 2) {
+                if (count($f) > 2) {
+                    $k = array_shift($f);
+                    $b = join($operator, $f);
+                    $f = array($k, $b);
+                }
                 $tvName = $modx->quote($f[0]);
                 if (is_numeric($f[1]) && !in_array($sqlOperator, array('LIKE', 'NOT LIKE'))) {
                     $tvValue = $f[1];
@@ -417,7 +428,7 @@ if (!empty($debug)) {
 }
 $collection = $modx->getCollection('modResource', $criteria, $dbCacheFlag);
 
-$idx = !empty($idx) && $idx !== '0' ? (integer) $idx : 1;
+$idx = !empty($idx) || $idx === '0' ? (integer) $idx : 1;
 $first = empty($first) && $first !== '0' ? 1 : (integer) $first;
 $last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 
@@ -461,7 +472,7 @@ foreach ($collection as $resourceId => $resource) {
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
     );
-    $resourceTpl = '';
+    $resourceTpl = false;
     if ($idx == $first && !empty($tplFirst)) {
         $resourceTpl = parseTpl($tplFirst, $properties);
     }
@@ -575,7 +586,7 @@ foreach ($collection as $resourceId => $resource) {
     if (!empty($tpl) && empty($resourceTpl)) {
         $resourceTpl = parseTpl($tpl, $properties);
     }
-    if (empty($resourceTpl)) {
+    if ($resourceTpl === false && !empty($debug)) {
         $chunk = $modx->newObject('modChunk');
         $chunk->setCacheable(false);
         $output[]= $chunk->process(array(), '<pre>' . print_r($properties, true) .'</pre>');
@@ -586,9 +597,9 @@ foreach ($collection as $resourceId => $resource) {
 }
 
 /* output */
-$toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders',$scriptProperties,false);
+$toSeparatePlaceholders = $modx->getOption('toSeparatePlaceholders', $scriptProperties, false);
 if (!empty($toSeparatePlaceholders)) {
-    $modx->setPlaceholders($output,$toSeparatePlaceholders);
+    $modx->setPlaceholders($output, $toSeparatePlaceholders);
     return '';
 }
 
@@ -597,12 +608,12 @@ $output = implode($outputSeparator, $output);
 $tplWrapper = $modx->getOption('tplWrapper', $scriptProperties, false);
 $wrapIfEmpty = $modx->getOption('wrapIfEmpty', $scriptProperties, false);
 if (!empty($tplWrapper) && ($wrapIfEmpty || !empty($output))) {
-    $output = parseTpl($tplWrapper, array('output' => $output));
+    $output = parseTpl($tplWrapper, array_merge($scriptProperties, array('output' => $output)));
 }
 
-$toPlaceholder = $modx->getOption('toPlaceholder',$scriptProperties,false);
+$toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties, false);
 if (!empty($toPlaceholder)) {
-    $modx->setPlaceholder($toPlaceholder,$output);
+    $modx->setPlaceholder($toPlaceholder, $output);
     return '';
 }
 return $output;

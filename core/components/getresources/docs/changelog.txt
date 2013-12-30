@@ -1,5 +1,12 @@
 Changelog for getResources.
 
+getResources 1.6.1-pl (December 30, 2013)
+====================================
+- Allow tvFilter values to contain filter operators
+- Allow 0-based idx
+- Pass scriptProperties to wrapperTpl
+- [#30][#80] Only dump properties for invalid tpl when debug enabled
+
 getResources 1.6.0-pl (February 19, 2013)
 ====================================
 - Add tplWrapper for specifying a wrapper template

@@ -2,7 +2,7 @@
 if (!function_exists('parseTplElement')) {
     function parseTplElement(& $_cache, $_validTypes, $type, $source, $properties = null) {
         global $modx;
-        $output = null;
+        $output = false;
         if (!is_string($type) || !in_array($type, $_validTypes)) $type = $modx->getOption('tplType', $properties, '@CHUNK');
         $content = false;
         switch ($type) {
@@ -55,15 +55,13 @@ if (!function_exists('parseTplElement')) {
 }
 if (!function_exists('parseTpl')) {
     function parseTpl($tpl, $properties = null) {
-        global $modx;
         static $_tplCache;
         $_validTypes = array(
             '@CHUNK'
             ,'@FILE'
             ,'@INLINE'
         );
-        $output = '';
-        $prefix = $modx->getOption('tplPrefix', $properties, '');
+        $output = false;
         if (!empty($tpl)) {
             $bound = array(
                 'type' => '@CHUNK'
@@ -82,11 +80,6 @@ if (!function_exists('parseTpl')) {
             if (is_array($bound) && isset($bound['type']) && isset($bound['value'])) {
                 $output = parseTplElement($_tplCache, $_validTypes, $bound['type'], $bound['value'], $properties);
             }
-        }
-        if (empty($output) && $output !== '0') { /* print_r the object fields that were returned if no tpl is provided */
-            $chunk = $modx->newObject('modChunk');
-            $chunk->setCacheable(false);
-            $output = $chunk->process(array("{$prefix}output" => print_r($properties, true)), "<pre>[[+{$prefix}output]]</pre>");
         }
         return $output;
     }

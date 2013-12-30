@@ -3,13 +3,11 @@
  * getResources
  *
  * @package getResources
- * @author Jason Coward <jason@modx.com>
+ * @author Jason Coward <jason@opengeek.com>
  */
-$mtime = microtime();
-$mtime = explode(" ", $mtime);
-$mtime = $mtime[1] + $mtime[0];
-$tstart = $mtime;
-set_time_limit(0);
+$tstart = microtime(true);
+
+@set_time_limit(0);
 
 /* define sources */
 $root = dirname(dirname(__FILE__)) . '/';
@@ -31,7 +29,7 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 /* set package info */
 define('PKG_NAME','getresources');
-define('PKG_VERSION','1.6.0');
+define('PKG_VERSION','1.6.1');
 define('PKG_RELEASE','pl');
 
 /* load builder */
@@ -44,7 +42,7 @@ $builder->createPackage(PKG_NAME, PKG_VERSION, PKG_RELEASE);
 $modx->log(xPDO::LOG_LEVEL_INFO,'Adding in snippet.'); flush();
 $snippet= $modx->newObject('modSnippet');
 $snippet->set('name', 'getResources');
-$snippet->set('description', '<strong>'.PKG_VERSION.'-'.PKG_RELEASE.'</strong> A general purpose Resource listing and summarization snippet for MODx Revolution');
+$snippet->set('description', '<strong>'.PKG_VERSION.'-'.PKG_RELEASE.'</strong> A general purpose Resource listing and summarization snippet for MODX Revolution');
 $snippet->set('category', 0);
 $snippet->set('snippet', file_get_contents($sources['source_core'] . '/snippet.getresources.php'));
 $properties = include $sources['build'].'properties.inc.php';
@@ -74,10 +72,7 @@ $builder->setPackageAttributes(array(
 /* zip up the package */
 $builder->pack();
 
-$mtime= microtime();
-$mtime= explode(" ", $mtime);
-$mtime= $mtime[1] + $mtime[0];
-$tend= $mtime;
+$tend= microtime(true);
 $totalTime= ($tend - $tstart);
 $totalTime= sprintf("%2.4f s", $totalTime);
 
