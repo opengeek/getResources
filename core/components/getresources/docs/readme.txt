@@ -1,7 +1,7 @@
 --------------------
 Snippet: getResources
 --------------------
-Version: 1.6.0-pl
+Version: 1.6.1-pl
 Released: December 30, 2013
 Since: December 28, 2009
 Author: Jason Coward <jason@opengeek.com>

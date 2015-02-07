@@ -5,7 +5,7 @@
  * A general purpose Resource listing and summarization snippet for MODX 2.x.
  *
  * @author Jason Coward
- * @copyright Copyright 2010-2013, Jason Coward
+ * @copyright Copyright 2010-2015, Jason Coward
  *
  * TEMPLATES
  *
@@ -415,7 +415,7 @@ if (!empty($sortby)) {
     if (is_array($sorts)) {
         while (list($sort, $dir) = each($sorts)) {
             if ($sort == 'resources' && !empty($resources)) {
-                $sort = 'FIELD(modResource.id, ' . implode($resources,',') . ')';            
+                $sort = 'FIELD(modResource.id, ' . implode($resources,',') . ')';
             }
             if ($sortbyEscaped) $sort = $modx->escape($sort);
             if (!empty($sortbyAlias)) $sort = $modx->escape($sortbyAlias) . ".{$sort}";
