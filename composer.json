@@ -1,0 +1,23 @@
+{
+  "name": "opengeek/getresources",
+  "description": "Utility snippet for fetching resources",
+  "type": "modx-package",
+  "keywords": ["modx","getresources","xpdo","query","resources"],
+  "homepage": "https://github.com/opengeek/getresources",
+  "license": "GPL-2.0+",
+  "support": {
+    "issues": "https://github.com/opengeek/getresources/issues",
+    "forum": "http://forums.modx.com/",
+    "wiki": "https://github.com/opengeek/getresources/wiki",
+    "source": "https://github.com/opengeek/getresources.git"
+  },
+  "autoload": {
+  },
+  "extra": {
+    "package_name": "getResources",
+    "namespace": "getresources",
+    "version": "1.8.0",
+    "release": "dev",
+    "category":"getResources"
+  }
+}

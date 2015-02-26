@@ -1,99 +1,69 @@
 <?php
 /**
- * getResources
+ * @name getResources
  *
- * A general purpose Resource listing and summarization snippet for MODX 2.x.
+ * @description A general purpose Resource listing and summarization snippet for MODX 2.x.
  *
  * @author Jason Coward
  * @copyright Copyright 2010-2015, Jason Coward
  *
  * TEMPLATES
  *
- * tpl - Name of a chunk serving as a resource template
- * [NOTE: if not provided, properties are dumped to output for each resource]
- *
- * tplOdd - (Opt) Name of a chunk serving as resource template for resources with an odd idx value
- * (see idx property)
- * tplFirst - (Opt) Name of a chunk serving as resource template for the first resource (see first
- * property)
- * tplLast - (Opt) Name of a chunk serving as resource template for the last resource (see last
- * property)
+ * @param string $tpl Name of a chunk serving as a resource template. NOTE: if not provided, properties are dumped to output for each resource.
+ * @param string $tplOdd Name of a chunk serving as resource template for resources with an odd idx value (see idx property).
+ * @param string $tplFirst Name of a chunk serving as resource template for the first resource (see first property).
+ * @param string $tplLast Name of a chunk serving as resource template for the last resource (see last property).
  * tpl_{n} - (Opt) Name of a chunk serving as resource template for the nth resource
- *
- * tplCondition - (Opt) Defines a field of the resource to evaluate against keys defined in the
- * conditionalTpls property. Must be a resource field; does not work with Template Variables.
- * conditionalTpls - (Opt) A JSON object defining a map of field values and the associated tpl to
- * use when the field defined by tplCondition matches the value. [NOTE: tplOdd, tplFirst, tplLast,
- * and tpl_{n} will take precedence over any defined conditionalTpls]
- *
- * tplWrapper - (Opt) Name of a chunk serving as a wrapper template for the output
- * [NOTE: Does not work with toSeparatePlaceholders]
+ * @param string $tplCondition A condition to compare against the conditionalTpls property to map Resources to different tpls based on custom conditional logic. Must be a resource field; does not work with Template Variables.
+ * @param string $conditionalTpls A JSON map of conditional operands and tpls to compare against the tplCondition property using the specified tplOperator. Use when the field defined by tplCondition matches the value. [NOTE: tplOdd, tplFirst, tplLast, and tpl_{n} will take precedence over any defined conditionalTpls]
+ * @param list $tplOperator An optional operator to use for the tplCondition when comparing against the conditionalTpls operands. Default is == (equals). [default="=="] [options={"==":"is equal to","!=":"is not equal to","<":"less than","<=":"less than or equal to",">":"greater than",">=":"greater than or equal to","empty":"is empty","!empty":"is not empty","null":"is null","inarray":"is in array","between":"is between"}]
+ * @param string $tplWrapper Name of a chunk serving as wrapper template for the Snippet output. This does not work with toSeparatePlaceholders.
  *
  * SELECTION
  *
- * parents - Comma-delimited list of ids serving as parents
+ * @param string $parents Optional. Comma-delimited list of ids serving as parents.
+ * @param string $context A comma-delimited list of context keys for limiting results. Default is empty, i.e. do not limit results by context.
+ * @param integer $depth Integer value indicating depth to search for resources from each parent. Defaults to 10. [default=10]
+ * @param string $tvFilters Delimited-list of TemplateVar values to filter resources by. Supports two delimiters and two value search formats. THe first delimiter || represents a logical OR and the primary grouping mechanism.  Within each group you can provide a comma-delimited list of values. These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the value, indicating you are searching for the value in any TemplateVar tied to the Resource. An example would be &tvFilters=`filter2==one,filter1==bar%||filter1==foo`. <br />NOTE: filtering by values uses a LIKE query and % is considered a wildcard. <br />ANOTHER NOTE: This only looks at the raw value set for specific Resource, i. e. there must be a value specifically set for the Resource and it is not evaluated.
+ * @param boolean $showHidden Indicates if Resources that are hidden from menus should be shown. Defaults to false. [default=false]
+ * @param boolean $showUnpublished Indicates if Resources that are unpublished should be shown. Defaults to false. [default=false]
+ * @param boolean $showDeleted Indicates if Resources that are deleted should be shown. Defaults to false. [default=false]
+ * @param string $tvFiltersAndDelimiter The delimiter to use to separate logical AND expressions in tvFilters. Customize when you want to match a literal comma in the tvFilters. E.g. &tvFiltersAndDelimiter=`&&` &tvFilters=`filter1==foo,bar&&filter2==baz` [default=","]
  *
- * context - (Opt) Comma-delimited list of context keys to limit results by; if empty, contexts for all specified
- * parents will be used (all contexts if 0 is specified) [default=]
+ * @param string $tvFiltersOrDelimiter The delimiter to use to separate logical OR expressions in tvFilters, in case you want to match a literal '||' in the tvFilters. E.g. &tvFiltersOrDelimiter=`|OR|` &tvFilters=`filter1==foo||bar|OR|filter2==baz` [default="||"]
  *
- * depth - (Opt) Integer value indicating depth to search for resources from each parent [default=10]
+ * @param string $where A JSON expression of criteria to build any additional where clauses from, e.g. &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
- * tvFilters - (Opt) Delimited-list of TemplateVar values to filter resources by. Supports two
- * delimiters and two value search formats. The first delimiter || represents a logical OR and the
- * primary grouping mechanism.  Within each group you can provide a comma-delimited list of values.
- * These values can be either tied to a specific TemplateVar by name, e.g. myTV==value, or just the
- * value, indicating you are searching for the value in any TemplateVar tied to the Resource. An
- * example would be &tvFilters=`filter2==one,filter1==bar%||filter1==foo`
- * [NOTE: filtering by values uses a LIKE query and % is considered a wildcard.]
- * [NOTE: this only looks at the raw value set for specific Resource, i. e. there must be a value
- * specifically set for the Resource and it is not evaluated.]
- *
- * tvFiltersAndDelimiter - (Opt) Custom delimiter for logical AND, default ',', in case you want to
- * match a literal comma in the tvFilters. E.g. &tvFiltersAndDelimiter=`&&`
- * &tvFilters=`filter1==foo,bar&&filter2==baz` [default=,]
- *
- * tvFiltersOrDelimiter - (Opt) Custom delimiter for logical OR, default '||', in case you want to
- * match a literal '||' in the tvFilters. E.g. &tvFiltersOrDelimiter=`|OR|`
- * &tvFilters=`filter1==foo||bar|OR|filter2==baz` [default=||]
- *
- * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
- * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
- *
- * sortby - (Opt) Field to sort by or a JSON array, e.g. {"publishedon":"ASC","createdon":"DESC"} [default=publishedon]
- * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
- * sortbyTVType - (Opt) A data type to CAST a TV Value to in order to sort on it properly [default=string]
- * sortbyAlias - (Opt) Query alias for sortby field [default=]
- * sortbyEscaped - (Opt) Escapes the field name(s) specified in sortby [default=0]
- * sortdir - (Opt) Order which to sort by [default=DESC]
- * sortdirTV - (Opt) Order which to sort by a TV [default=DESC]
- * limit - (Opt) Limits the number of resources returned [default=5]
- * offset - (Opt) An offset of resources returned by the criteria to skip [default=0]
- * dbCacheFlag - (Opt) Controls caching of db queries; 0|false = do not cache result set; 1 = cache result set
- * according to cache settings, any other integer value = number of seconds to cache result set [default=0]
+ * @param string $sortby A field name to sort by or JSON object of field names and sortdir for each field, e.g. {"publishedon":"ASC","createdon":"DESC"}. Defaults to publishedon. [default=publishedon]
+ * @param string $sortbyTV Name of a Template Variable to sort by. Defaults to empty string.
+ * @param list $sortbyTVType An optional type to indicate how to sort on the Template Variable value. [default=string] [options=["string","integer","decimal","datetime"]]
+ * @param string $sortbyAlias Query alias for sortby field. Defaults to an empty string.
+ * @param string $sortbyEscaped Determines if the field name specified in sortby should be escaped. Defaults to 0. [default=0]
+ * @param string $sortdir Order which to sort by. Defaults to DESC. [default=DESC] [options=["ASC","DESC"]]
+ * @param string $sortdirTV Order which to sort a Template Variable by. Defaults to DESC. [default=DESC] [options=["ASC","DESC"]]
+ * @param integer $limit Limits the number of resources returned. Defaults to 5. [default=5]
+ * @param integer $offset An offset of resources returned by the criteria to skip. [default=0]
+ * @param string dbCacheFlag Determines how result sets are cached if cache_db is enabled in MODX. 0|false = do not cache result set; 1 = cache result set according to cache settings, any other integer value = number of seconds to cache result set [default=0]
  *
  * OPTIONS
  *
- * includeContent - (Opt) Indicates if the content of each resource should be returned in the
- * results [default=0]
- * includeTVs - (Opt) Indicates if TemplateVar values should be included in the properties available
- * to each resource template [default=0]
- * includeTVList - (Opt) Limits the TemplateVars that are included if includeTVs is true to those specified
- * by name in a comma-delimited list [default=]
- * prepareTVs - (Opt) Prepares media-source dependent TemplateVar values [default=1]
- * prepareTVList - (Opt) Limits the TVs that are prepared to those specified by name in a comma-delimited
- * list [default=]
- * processTVs - (Opt) Indicates if TemplateVar values should be rendered as they would on the
- * resource being summarized [default=0]
- * processTVList - (opt) Limits the TemplateVars that are processed if included to those specified
- * by name in a comma-delimited list [default=]
- * tvPrefix - (Opt) The prefix for TemplateVar properties [default=tv.]
- * idx - (Opt) You can define the starting idx of the resources, which is an property that is
- * incremented as each resource is rendered [default=1]
- * first - (Opt) Define the idx which represents the first resource (see tplFirst) [default=1]
- * last - (Opt) Define the idx which represents the last resource (see tplLast) [default=# of
- * resources being summarized + first - 1]
+ * @param boolean $includeContentIndicates if the content of each resource should be returned in the results. Defaults to false. [default=false]
+ * @param combon-boolean $includeTVs Indicates if TemplateVar values should be included in the properties available to each resource template. Defaults to false. [default=false]
+ * @param string $includeTVList Limits included TVs to those specified as a comma-delimited list of TV names. Defaults to empty.
+ * @param boolean $prepareTVs Indicates if TemplateVar values that are not processed fully should be prepared before being returned. Defaults to true. [default=true]
+ * @param string prepareTVList Limits prepared TVs to those specified as a comma-delimited list of TV names; note only includedTVs will be available for preparing if specified. Defaults to empty.
+ * @param boolean $processTVs Indicates if TemplateVar values should be rendered as they would on the resource being summarized. Defaults to false. [default=false]
+ * @param string $processTVList Limits processed TVs to those specified as a comma-delimited list of TV names; note only includedTVs will be available for processing if specified. Defaults to empty.
+ * @param string $tvPrefix The prefix for TemplateVar properties. Defaults to: tv. [default=tv.]
+ * @param string $idx You can define the starting idx of the resources, which is an property that is incremented as each resource is rendered. [default=1]
+ * @param string $first Define the idx which represents the first resource (see tplFirst). Defaults to 1. [default=1]
+ * @param string $last Define the idx which represents the last resource (see tplLast). Defaults to the number of resources being summarized + first - 1
+ * @param string resources A comma-separated list of resource IDs to exclude or include. IDs with a - in front mean to exclude. Ex: 123,-456 means to include Resource 123, but always exclude Resource 456.
  * outputSeparator - (Opt) An optional string to separate each tpl instance [default="\n"]
- * wrapIfEmpty - (Opt) Indicates if the tplWrapper should be applied if the output is empty [default=0]
+ * @param boolean $wrapIfEmpty - Indicates if empty output should be wrapped by the tplWrapper, if specified. Defaults to false. [default=0]
+ * @param string $toPlaceholder If set, will assign the result to this placeholder instead of outputting it directly.
+ * @param string $toSeparatePlaceholders If set, will assign EACH result to a separate placeholder named by this param suffixed with a sequential number (starting from 0).
+ * @param boolean $debug If true, will send the SQL query to the MODX log. Defaults to false. [default=false]
  *
  */
 $output = array();
@@ -436,7 +406,8 @@ $first = empty($first) && $first !== '0' ? 1 : (integer) $first;
 $last = empty($last) ? (count($collection) + $idx - 1) : (integer) $last;
 
 /* include parseTpl */
-include_once $modx->getOption('getresources.core_path',null,$modx->getOption('core_path').'components/getresources/').'include.parsetpl.php';
+$core_path = $modx->getOption('getresources.core_path',null,MODX_CORE_PATH.'components/getresources/');
+include_once $core_path.'elements/snippets/include.parsetpl.php';
 
 $templateVars = array();
 if (!empty($includeTVs) && !empty($includeTVList)) {
@@ -468,9 +439,9 @@ foreach ($collection as $resourceId => $resource) {
         $scriptProperties
         ,array(
             'idx' => $idx
-            ,'first' => $first
-            ,'last' => $last
-            ,'odd' => $odd
+        ,'first' => $first
+        ,'last' => $last
+        ,'odd' => $odd
         )
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs

@@ -1,4 +1,8 @@
 <?php
+/**
+ * Do not import this as a Snippet into Repoman
+ * @no_import
+ */
 if (!function_exists('parseTplElement')) {
     function parseTplElement(& $_cache, $_validTypes, $type, $source, $properties = null) {
         global $modx;

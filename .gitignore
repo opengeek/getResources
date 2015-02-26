@@ -3,3 +3,4 @@ _build/build.config.php
 .settings
 .DS_Store
 nbproject
+vendor/
