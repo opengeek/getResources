@@ -275,7 +275,13 @@ if (!empty($tvFilters)) {
                 $tvName = $modx->quote($f[0]);
                 if (is_numeric($f[1]) && !in_array($sqlOperator, array('LIKE', 'NOT LIKE'))) {
                     $tvValue = $f[1];
-                    if ($f[1] == (integer)$f[1]) {
+                    $tv = $modx->getObject('modTemplateVar', array('name' => $f[0]), $dbCacheFlag);
+
+                    // Convert dates to timestamps to allow comparisons.
+                    if ($tv && $tv->get('type') === 'date') {
+                        $tvValueField = "UNIX_TIMESTAMP(STR_TO_DATE({$tvValueField}, '%d-%m-%Y %H:%i:%s'))";
+                        $tvDefaultField = "UNIX_TIMESTAMP(STR_TO_DATE({$tvDefaultField}, '%d-%m-%Y %H:%i:%s'))";
+                    } elseif ($f[1] == (integer)$f[1]) {
                         $tvValueField = "CAST({$tvValueField} AS SIGNED INTEGER)";
                         $tvDefaultField = "CAST({$tvDefaultField} AS SIGNED INTEGER)";
                     } else {
