@@ -413,7 +413,7 @@ if (!empty($sortby)) {
         $sorts = array($sortby => $sortdir);
     }
     if (is_array($sorts)) {
-        foreach($sorts as list($sort, $dir)){
+        foreach($sorts as $sort => $dir){
             if ($sort == 'resources' && !empty($resources)) {
                 $sort = 'FIELD(modResource.id, ' . implode($resources,',') . ')';
             }
