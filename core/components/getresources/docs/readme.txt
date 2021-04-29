@@ -1,12 +1,12 @@
 --------------------
 Snippet: getResources
 --------------------
-Version: 1.6.1-pl
-Released: December 30, 2013
+Version: 1.7.0-pl
+Released: April 29, 2021
 Since: December 28, 2009
 Author: Jason Coward <jason@opengeek.com>
 
 A general purpose Resource listing and summarization snippet for MODX Revolution.
 
 Official Documentation:
-http://docs.modxcms.com/display/ADDON/getResources
+https://docs.modx.com/current/en/extras/getresources

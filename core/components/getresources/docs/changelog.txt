@@ -1,5 +1,8 @@
 Changelog for getResources.
 
+getResources 1.7.0-pl (April 29, 2021)
+====================================
+- [#104] Replace deprecated each() usage
 - [#97] Add sortby resources to apply input order
 
 getResources 1.6.1-pl (December 30, 2013)
