@@ -415,7 +415,7 @@ if (!empty($sortby)) {
     if (is_array($sorts)) {
         foreach($sorts as $sort => $dir){
             if ($sort == 'resources' && !empty($resources)) {
-                $sort = 'FIELD(modResource.id, ' . implode($resources,',') . ')';
+                $sort = 'FIELD(modResource.id, ' . implode(',', $resources) . ')';
             }
             if ($sortbyEscaped) $sort = $modx->escape($sort);
             if (!empty($sortbyAlias)) $sort = $modx->escape($sortbyAlias) . ".{$sort}";
