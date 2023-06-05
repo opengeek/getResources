@@ -1,5 +1,9 @@
 Changelog for getResources.
 
+getResources 1.7.1-pl (June 5, 2023)
+====================================
+- [#109] Fix implode() param order warning
+
 getResources 1.7.0-pl (April 29, 2021)
 ====================================
 - [#104] Replace deprecated each() usage

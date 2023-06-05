@@ -29,7 +29,7 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 
 /* set package info */
 define('PKG_NAME','getresources');
-define('PKG_VERSION','1.7.0');
+define('PKG_VERSION','1.7.1');
 define('PKG_RELEASE','pl');
 
 /* load builder */

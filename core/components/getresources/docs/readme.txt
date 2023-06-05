@@ -1,8 +1,8 @@
 --------------------
 Snippet: getResources
 --------------------
-Version: 1.7.0-pl
-Released: April 29, 2021
+Version: 1.7.1-pl
+Released: June 5, 2023
 Since: December 28, 2009
 Author: Jason Coward <jason@opengeek.com>
 
