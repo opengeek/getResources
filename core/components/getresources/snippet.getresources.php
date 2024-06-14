@@ -471,6 +471,7 @@ foreach ($collection as $resourceId => $resource) {
             ,'first' => $first
             ,'last' => $last
             ,'odd' => $odd
+            ,'prop' => $resource->get('properties')
         )
         ,$includeContent ? $resource->toArray() : $resource->get($fields)
         ,$tvs
