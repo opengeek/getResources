@@ -410,6 +410,15 @@ if (!empty($sortby)) {
     if (strpos($sortby, '{') === 0) {
         $sorts = $modx->fromJSON($sortby);
     } else {
+        if (strtolower($sortby) == "resources") {
+            if (is_array($resources)) {
+                $resources__csv = implode(',',$resources);
+            } else {
+                $resources__csv = $resources;
+            }
+            $resources__csv = implode(',',$resources);
+            $sortby= "FIELD(modResource.id,{$resources__csv})";
+        }
         $sorts = array($sortby => $sortdir);
     }
     if (is_array($sorts)) {
