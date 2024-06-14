@@ -59,6 +59,10 @@
  * where - (Opt) A JSON expression of criteria to build any additional where clauses from. An example would be
  * &where=`{{"alias:LIKE":"foo%", "OR:alias:LIKE":"%bar"},{"OR:pagetitle:=":"foobar", "AND:description:=":"raboof"}}`
  *
+ * complexWhere - (Opt) A SQL expression of criteria to build any additional complex where clauses from 
+ * (like CASE WHEN or stored functions calls). An example would be
+ * &complexWhere=`MY_STORED_FUNCTION ( modResource.publishedby, modResource.editedby ) = 1`
+ *
  * sortby - (Opt) Field to sort by or a JSON array, e.g. {"publishedon":"ASC","createdon":"DESC"} [default=publishedon]
  * sortbyTV - (opt) A Template Variable name to sort by (if supplied, this precedes the sortby value) [default=]
  * sortbyTVType - (Opt) A data type to CAST a TV Value to in order to sort on it properly [default=string]
@@ -214,6 +218,9 @@ $parents = array_merge($parentArray, $children);
 
 /* build query */
 $criteria = array("modResource.parent IN (" . implode(',', $parents) . ")");
+if ( isset( $complexWhere ) ) {
+	$criteria[] = $complexWhere;
+}
 if ($contextSpecified) {
     $contextResourceTbl = $modx->getTableName('modContextResource');
     $criteria[] = "(modResource.context_key IN ({$context}) OR EXISTS(SELECT 1 FROM {$contextResourceTbl} ctx WHERE ctx.resource = modResource.id AND ctx.context_key IN ({$context})))";
