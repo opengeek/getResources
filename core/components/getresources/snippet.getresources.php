@@ -257,7 +257,7 @@ if (!empty($tvFilters)) {
             $operator = '==';
             $sqlOperator = 'LIKE';
             foreach ($operators as $op => $opSymbol) {
-                if (strpos($filter, $op, 1) !== false) {
+                if (strlen($filter) > 1 && strpos($filter, $op, 1) !== false) {
                     $operator = $op;
                     $sqlOperator = $opSymbol;
                     break;
