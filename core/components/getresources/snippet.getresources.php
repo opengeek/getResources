@@ -247,12 +247,15 @@ if (!empty($tvFilters)) {
         '=<' => '=<',
         '>>' => '>',
         '>=' => '>=',
-        '=>' => '=>'
+        '=>' => '=>',
+        '(IN)' => 'FIND_IN_SET'
     );
     foreach ($tvFilters as $fGroup => $tvFilter) {
+    
         $filterGroup = array();
         $filters = explode($tvFiltersAndDelimiter, $tvFilter);
         $multiple = count($filters) > 0;
+      
         foreach ($filters as $filter) {
             $operator = '==';
             $sqlOperator = 'LIKE';
@@ -285,19 +288,38 @@ if (!empty($tvFilters)) {
                 } else {
                     $tvValue = $modx->quote($f[1]);
                 }
-                if ($multiple) {
-                    $filterGroup[] =
-                        "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
-                        "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND {$tvDefaultField} {$sqlOperator} {$tvValue} AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
-                        ")";
-                } else {
-                    $filterGroup =
-                        "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
-                        "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND {$tvDefaultField} {$sqlOperator} {$tvValue} AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
-                        ")";
+	      
+                if($sqlOperator == 'FIND_IN_SET'){
+		  
+                    if ($multiple) {
+                        $filterGroup[] =
+                            "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON FIND_IN_SET({$tvValue}, {$tvValueField}) AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
+                            "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND FIND_IN_SET({$tvValue}, {$tvDefaultField}) AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
+                            ")";
+                    } else {
+                        $filterGroup =
+                            "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON FIND_IN_SET({$tvValue}, {$tvValueField}) AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
+                            "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND FIND_IN_SET({$tvValue}, {$tvDefaultField}) AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
+                            ")";
+                    }
+                }
+
+                else {
+                    if($multiple) {
+                        $filterGroup[] =
+                            "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
+                            "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND {$tvDefaultField} {$sqlOperator} {$tvValue} AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
+                            ")";
+                    } else {
+                        $filterGroup =
+                            "(EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.name = {$tvName} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id) " .
+                            "OR EXISTS (SELECT 1 FROM {$tmplVarTbl} tv WHERE tv.name = {$tvName} AND {$tvDefaultField} {$sqlOperator} {$tvValue} AND tv.id NOT IN (SELECT tmplvarid FROM {$tmplVarResourceTbl} WHERE contentid = modResource.id)) " .
+                            ")";
+                    }
                 }
             } elseif (count($f) == 1) {
                 $tvValue = $modx->quote($f[0]);
+	      
                 if ($multiple) {
                     $filterGroup[] = "EXISTS (SELECT 1 FROM {$tmplVarResourceTbl} tvr JOIN {$tmplVarTbl} tv ON {$tvValueField} {$sqlOperator} {$tvValue} AND tv.id = tvr.tmplvarid WHERE tvr.contentid = modResource.id)";
                 } else {
